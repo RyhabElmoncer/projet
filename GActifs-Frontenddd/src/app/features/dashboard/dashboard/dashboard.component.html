@@ -1,0 +1,87 @@
+<!-- Sidebar Overlay -->
+<div #overlay class="sidebar-overlay" [class.active]="sidebarOpen" (click)="closeSidebar()"></div>
+
+<!-- Header -->
+<header class="header">
+    <div class="header-left">
+        <button #menuToggle class="menu-toggle" (click)="toggleSidebar()">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="header-title">
+            <h2>Dashboard</h2>
+        </div>
+    </div>
+
+    <div class="header-right">
+        <div class="header-actions">
+            <!-- Notifications -->
+
+
+            <!-- Settings -->
+
+
+            <!-- User Menu -->
+            <div class="user-menu">
+
+
+                <button class="logout-btn" (click)="logout()" title="Déconnexion">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="logout-text">Déconnexion</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Layout -->
+<div class="main-layout">
+    <!-- Sidebar -->
+    <aside #sidebar class="sidebar" [class.open]="sidebarOpen">
+
+
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+
+
+                <li class="nav-item">
+                    <a routerLink="/dashboard/assetmanagement" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-hdd-network nav-icon"></i>
+                        <span class="nav-text">Gestion des actifs</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a routerLink="/dashboard/aservicedirection" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-people nav-icon"></i>
+                        <span class="nav-text">Gestion Des Direction</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a routerLink="/dashboard/users" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-people nav-icon"></i>
+                        <span class="nav-text">Gestions Utilisateurs</span>
+                    </a>
+                </li>
+
+
+
+
+                <li class="nav-item">
+                    <a routerLink="/dashboard/settings" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-gear nav-icon"></i>
+                        <span class="nav-text">Paramètres</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <router-outlet></router-outlet>
+        </div>
+    </main>
+</div>

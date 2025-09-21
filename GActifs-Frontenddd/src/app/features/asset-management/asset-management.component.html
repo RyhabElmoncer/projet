@@ -1,0 +1,501 @@
+<div class="asset-management-container">
+    <!-- Header Section -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <svg class="title-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                Gestion des Actifs
+            </h1>
+            <p class="page-description">Gérez vos équipements et matériels en toute simplicité</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" (click)="openAssetModal()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                Nouvel Actif
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="service-filter">Service/Direction</label>
+                <select
+                        id="service-filter"
+                        class="form-select"
+                        [(ngModel)]="selectedService"
+                        (ngModelChange)="onFilterChange()"
+                >
+                    <option value="">Tous les services</option>
+                    <option *ngFor="let service of services" [value]="service.id">
+                        {{ service.serviceName  }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="status-filter">État</label>
+                <select
+                        id="status-filter"
+                        class="form-select"
+                        [(ngModel)]="selectedStatus"
+                        (ngModelChange)="onFilterChange()"
+                >
+                    <option value="">Tous les états</option>
+                    <option value="EN_SERVICE">En service</option>
+                    <option value="EN_PANNE">En panne</option>
+                    <option value="EN_MAINTENANCE">En maintenance</option>
+                    <option value="HORS_USAGE">Hors d'usage</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="category-filter">Catégorie</label>
+                <select
+                        id="category-filter"
+                        class="form-select"
+                        [(ngModel)]="selectedCategory"
+                        (ngModelChange)="onFilterChange()"
+                >
+                    <option value="">Toutes les catégories</option>
+                    <option value="TOPOGRAPHIQUE">Matériel Topographique</option>
+                    <option value="INFORMATIQUE">Matériel Informatique</option>
+                    <option value="VEHICULE">Véhicules</option>
+                    <option value="MOBILIER">Mobilier</option>
+                    <option value="AUTRE">Autre</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="search-input">Recherche</label>
+                <div class="search-input-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    <input
+                            id="search-input"
+                            type="text"
+                            class="form-input search-input"
+                            placeholder="Rechercher par nom, référence..."
+                            [(ngModel)]="searchTerm"
+                            (ngModelChange)="onFilterChange()"
+                    />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card stat-total">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ totalAssets }}</div>
+                    <div class="stat-label">Total Actifs</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-active">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ activeAssets }}</div>
+                    <div class="stat-label">En Service</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-maintenance">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ maintenanceAssets }}</div>
+                    <div class="stat-label">En Maintenance</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-broken">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.58L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ brokenAssets }}</div>
+                    <div class="stat-label">En Panne</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assets Table -->
+    <div class="table-section">
+        <div class="table-header">
+            <h2>Liste des Actifs</h2>
+            <div class="table-actions">
+                <button class="btn btn-outline" (click)="exportAssets()">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                    </svg>
+                    Exporter
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container" *ngIf="filteredAssets.length > 0; else noAssets">
+            <table class="assets-table">
+                <thead>
+                <tr>
+                    <th>
+                        <input
+                                type="checkbox"
+                                class="checkbox"
+                                [checked]="isAllSelected()"
+                                (change)="toggleSelectAll()"
+                        />
+                    </th>
+                    <th (click)="sort('nom')" class="sortable">
+                        Nom
+                        <svg class="sort-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 14l5-5 5 5z"/>
+                        </svg>
+                    </th>
+                    <th (click)="sort('reference')" class="sortable">
+                        Référence
+                        <svg class="sort-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 14l5-5 5 5z"/>
+                        </svg>
+                    </th>
+                    <th>Catégorie</th>
+                    <th>Service</th>
+                    <th>État</th>
+                    <th (click)="sort('dateAcquisition')" class="sortable">
+                        Date d'acquisition
+                        <svg class="sort-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 14l5-5 5 5z"/>
+                        </svg>
+                    </th>
+                    <th>Valeur</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let asset of paginatedAssets; trackBy: trackByAssetId" class="asset-row">
+                    <td>
+                        <input
+                                type="checkbox"
+                                class="checkbox"
+                                [checked]="selectedAssets.has(asset.id!)"
+                                (change)="toggleAssetSelection(asset.id!)"
+                        />
+                    </td>
+                    <td class="asset-name">
+                        <div class="asset-info">
+                            <div class="asset-icon" [ngClass]="'icon-' + asset.categorie.toLowerCase()">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path [attr.d]="getAssetIcon(asset.categorie)"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="name">{{ asset.nom }}</div>
+                                <div class="description" *ngIf="asset.description">{{ asset.description }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="reference">{{ asset.reference }}</td>
+                    <td>
+              <span class="category-badge" [ngClass]="'badge-' + asset.categorie.toLowerCase()">
+                {{ getCategoryLabel(asset.categorie) }}
+              </span>
+                    </td>
+                    <td class="service">{{ asset.service.serviceName  }}</td>
+                    <td>
+              <span class="status-badge" [ngClass]="'status-' + asset.etat.toLowerCase()">
+                <span class="status-dot"></span>
+                  {{ getStatusLabel(asset.etat) }}
+              </span>
+                    </td>
+                    <td>{{ asset.dateAcquisition | date:'dd/MM/yyyy' }}</td>
+                    <td class="value">{{ asset.valeur | currency:'EUR':'symbol':'1.0-0' }}</td>
+                    <td class="actions">
+                        <div class="action-buttons">
+                            <button
+                                    class="btn-action btn-view"
+                                    (click)="viewAsset(asset)"
+                                    title="Voir les détails"
+                            >
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                </svg>
+                            </button>
+                            <button
+                                    class="btn-action btn-edit"
+                                    (click)="editAsset(asset)"
+                                    title="Modifier"
+                            >
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button
+                                    class="btn-action btn-delete"
+                                    (click)="deleteAsset(asset)"
+                                    title="Supprimer"
+                            >
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- No Assets Message -->
+        <ng-template #noAssets>
+            <div class="no-assets">
+                <svg class="no-assets-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                </svg>
+                <h3>Aucun actif trouvé</h3>
+                <p>Aucun actif ne correspond aux critères de recherche sélectionnés.</p>
+                <button class="btn btn-primary" (click)="clearFilters()">
+                    Effacer les filtres
+                </button>
+            </div>
+        </ng-template>
+
+        <!-- Pagination -->
+        <div class="pagination-section" *ngIf="filteredAssets.length > 0">
+            <div class="pagination-info">
+                Affichage de {{ (currentPage - 1) * pageSize + 1 }} à
+                {{ Math.min(currentPage * pageSize, filteredAssets.length) }} sur {{ filteredAssets.length }} actifs
+            </div>
+            <div class="pagination-controls">
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === 1"
+                        (click)="changePage(currentPage - 1)"
+                >
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                    Précédent
+                </button>
+
+                <div class="page-numbers">
+                    <button
+                            *ngFor="let page of getPageNumbers()"
+                            class="btn btn-page"
+                            [class.active]="page === currentPage"
+                            (click)="changePage(page)"
+                    >
+                        {{ page }}
+                    </button>
+                </div>
+
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === totalPages"
+                        (click)="changePage(currentPage + 1)"
+                >
+                    Suivant
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Asset Modal -->
+<div class="modal-overlay" *ngIf="showAssetModal" (click)="closeAssetModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+            <h2>{{ isEditMode ? 'Modifier l\'actif' : 'Nouvel actif' }}</h2>
+            <button class="btn-close" (click)="closeAssetModal()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <form class="asset-form" #assetForm="ngForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nom">Nom *</label>
+                        <input
+                                id="nom"
+                                type="text"
+                                class="form-input"
+                                [(ngModel)]="currentAsset.nom "
+                                name="nom"
+                                required
+                                #nomInput="ngModel"
+                        />
+                        <div class="error-message" *ngIf="nomInput.invalid && nomInput.touched">
+                            Le nom est requis
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reference">Référence *</label>
+                        <input
+                                id="reference"
+                                type="text"
+                                class="form-input"
+                                [(ngModel)]="currentAsset.reference"
+                                name="reference"
+                                required
+                                #referenceInput="ngModel"
+                        />
+                        <div class="error-message" *ngIf="referenceInput.invalid && referenceInput.touched">
+                            La référence est requise
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="categorie">Catégorie *</label>
+                        <select
+                                id="categorie"
+                                class="form-select"
+                                [(ngModel)]="currentAsset.categorie"
+                                name="categorie"
+                                required
+                        >
+                            <option value="">Sélectionner une catégorie</option>
+                            <option value="TOPOGRAPHIQUE">Matériel Topographique</option>
+                            <option value="INFORMATIQUE">Matériel Informatique</option>
+                            <option value="VEHICULE">Véhicules</option>
+                            <option value="MOBILIER">Mobilier</option>
+                            <option value="AUTRE">Autre</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="service">Service/Direction *</label>
+                        <select
+                                id="service"
+                                class="form-select"
+                                [(ngModel)]="currentAsset.serviceId"
+                                name="service"
+                                required
+                        >
+                            <option value="">Sélectionner un service</option>
+                            <option *ngFor="let service of services" [value]="service.id">
+                                {{ service.serviceName  }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="etat">État *</label>
+                        <select
+                                id="etat"
+                                class="form-select"
+                                [(ngModel)]="currentAsset.etat"
+                                name="etat"
+                                required
+                        >
+                            <option value="EN_SERVICE">En service</option>
+                            <option value="EN_PANNE">En panne</option>
+                            <option value="EN_MAINTENANCE">En maintenance</option>
+                            <option value="HORS_USAGE">Hors d'usage</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateAcquisition">Date d'acquisition</label>
+                        <input
+                                id="dateAcquisition"
+                                type="date"
+                                class="form-input"
+                                [(ngModel)]="currentAsset.dateAcquisition"
+                                name="dateAcquisition"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="valeur">Valeur (€)</label>
+                        <input
+                                id="valeur"
+                                type="number"
+                                class="form-input"
+                                [(ngModel)]="currentAsset.valeur"
+                                name="valeur"
+                                min="0"
+                                step="0.01"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numeroSerie">Numéro de série</label>
+                        <input
+                                id="numeroSerie"
+                                type="text"
+                                class="form-input"
+                                [(ngModel)]="currentAsset.numeroSerie"
+                                name="numeroSerie"
+                        />
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="description">Description</label>
+                    <textarea
+                            id="description"
+                            class="form-textarea"
+                            [(ngModel)]="currentAsset.description"
+                            name="description"
+                            rows="3"
+                            placeholder="Description détaillée de l'actif..."
+                    ></textarea>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="localisation">Localisation</label>
+                    <input
+                            id="localisation"
+                            type="text"
+                            class="form-input"
+                            [(ngModel)]="currentAsset.localisation"
+                            name="localisation"
+                            placeholder="Bâtiment, étage, bureau..."
+                    />
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeAssetModal()">
+                Annuler
+            </button>
+            <button
+                    class="btn btn-primary"
+                    (click)="saveAsset()"
+                    [disabled]="!assetForm.valid || saving"
+            >
+                {{ saving ? 'Enregistrement...' : (isEditMode ? 'Modifier' : 'Créer') }}
+            </button>
+        </div>
+    </div>
+</div>

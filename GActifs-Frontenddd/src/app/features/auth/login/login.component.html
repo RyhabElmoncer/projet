@@ -1,0 +1,94 @@
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+            </div>
+            <h1>Bienvenue</h1>
+            <p>Connectez-vous à votre compte</p>
+        </div>
+
+        <div class="login-form">
+            <div *ngIf="errorMessage" class="alert alert-error">
+                <svg class="alert-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.58L19 8l-9 9z"/>
+                </svg>
+                {{ errorMessage }}
+            </div>
+
+            <div class="form-group">
+                <label for="email">Adresse email</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    <input
+                            id="email"
+                            type="email"
+                            [(ngModel)]="email"
+                            placeholder="votre@email.com"
+                            class="form-input"
+                            required
+                            autocomplete="email"
+                    />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                    </svg>
+                    <input
+                            id="password"
+                            type="password"
+                            [(ngModel)]="password"
+                            placeholder="••••••••"
+                            class="form-input"
+                            required
+                            autocomplete="current-password"
+                    />
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" class="checkbox">
+                    <span class="checkmark"></span>
+                    Se souvenir de moi
+                </label>
+                <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+            </div>
+
+            <button
+                    class="login-button"
+                    (click)="onLogin()"
+                    [disabled]="loading"
+                    [class.loading]="loading"
+            >
+        <span class="button-text">
+          {{ loading ? 'Connexion en cours...' : 'Se connecter' }}
+        </span>
+                <div class="loading-spinner" *ngIf="loading">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M22 12c0-5.52-4.48-10-10-10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </button>
+        </div>
+
+        <div class="login-footer">
+            <p>Pas encore de compte ? <a href="#" class="signup-link">Créer un compte</a></p>
+        </div>
+    </div>
+
+    <div class="background-decoration">
+        <div class="decoration-circle circle-1"></div>
+        <div class="decoration-circle circle-2"></div>
+        <div class="decoration-circle circle-3"></div>
+    </div>
+</div>

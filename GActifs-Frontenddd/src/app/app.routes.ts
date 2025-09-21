@@ -1,0 +1,52 @@
+import { Routes } from '@angular/router';
+import { AuthGuard } from './core/guards/auth.guard';
+import { AssetManagementComponent } from './features/asset-management/asset-management.component';
+import {DashboardComponent} from "./features/dashboard/dashboard/dashboard.component";
+import {ServiceDirectionComponent} from "./features/service-direction/service-direction.component";
+import {UserManagementComponent} from "./features/user-management/user-management.component";
+
+export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () =>
+        import('./features/auth/login/login.component').then(m => m.LoginComponent),
+    title: 'Connexion - '
+  },
+  {
+    path: 'dashboard',
+    component: DashboardComponent,
+    canActivate: [AuthGuard],
+    title: 'Dashboard - ',
+    children: [
+      {
+        path: 'assetmanagement',
+        component: AssetManagementComponent,
+        title: 'Gestion des actifs'
+      },
+      {
+        path: 'aservicedirection',
+        component: ServiceDirectionComponent,
+        title: 'Gestion Des Direction'
+      },
+      {
+        path: 'users',
+        component: UserManagementComponent,
+        title: 'Gestion Des Utulisateurs'
+      },
+      {
+        path: '',
+        redirectTo: 'assetmanagement',
+        pathMatch: 'full'
+      }
+    ]
+  },
+  {
+    path: '',
+    redirectTo: '/login',
+    pathMatch: 'full'
+  },
+  {
+    path: '**',
+    redirectTo: '/login'
+  }
+];

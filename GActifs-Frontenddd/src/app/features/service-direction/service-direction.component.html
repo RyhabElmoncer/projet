@@ -1,0 +1,393 @@
+<div class="service-direction-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <i class="icon-services"></i>
+                Gestion des Services et Directions
+            </h1>
+            <button
+                    class="btn btn-primary btn-create"
+                    (click)="openCreateModal()"
+                    [disabled]="loading">
+                <i class="icon-plus"></i>
+                Nouveau Service
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-section">
+        <form [formGroup]="searchForm" class="search-form">
+            <div class="search-input-group">
+                <i class="icon-search"></i>
+                <input
+                        type="text"
+                        formControlName="query"
+                        placeholder="Rechercher un service par nom, code ou responsable..."
+                        class="search-input">
+                <button
+                        type="button"
+                        class="btn-clear"
+                      >
+                    <i class="icon-x"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-overlay" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Chargement en cours...</p>
+    </div>
+
+    <!-- Services Table -->
+    <div class="table-container" *ngIf="!loading">
+        <div class="table-header">
+            <div class="table-info">
+        <span class="results-count">
+          {{pagedServices.totalElements}} service(s) trouvé(s)
+        </span>
+            </div>
+            <div class="table-controls">
+                <select
+                        class="page-size-select"
+                        [value]="pageRequest.size"
+                       >
+                    <option value="5">5 par page</option>
+                    <option value="10">10 par page</option>
+                    <option value="20">20 par page</option>
+                    <option value="50">50 par page</option>
+                </select>
+            </div>
+        </div>
+
+        <table class="services-table">
+            <thead>
+            <tr>
+                <th
+                        class="sortable"
+                        [class.sorted]="pageRequest.sort === 'nom'"
+                        [class.asc]="pageRequest.sort === 'nom' && pageRequest.direction === 'asc'"
+                        [class.desc]="pageRequest.sort === 'nom' && pageRequest.direction === 'desc'"
+                        (click)="onSortChange('nom')">
+                    Nom
+                    <i class="sort-icon"></i>
+                </th>
+                <th
+                        class="sortable"
+                        [class.sorted]="pageRequest.sort === 'code'"
+                        [class.asc]="pageRequest.sort === 'code' && pageRequest.direction === 'asc'"
+                        [class.desc]="pageRequest.sort === 'code' && pageRequest.direction === 'desc'"
+                        (click)="onSortChange('code')">
+                    Code
+                    <i class="sort-icon"></i>
+                </th>
+                <th>Responsable</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th
+                        class="sortable"
+                        [class.sorted]="pageRequest.sort === 'actif'"
+                        [class.asc]="pageRequest.sort === 'actif' && pageRequest.direction === 'asc'"
+                        [class.desc]="pageRequest.sort === 'actif' && pageRequest.direction === 'desc'"
+                        (click)="onSortChange('actif')">
+                    Statut
+                    <i class="sort-icon"></i>
+                </th>
+                <th class="actions-column">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let service of pagedServices.content;"
+                [class.inactive]="!service.actif">
+                <td class="service-name">
+                    <div class="name-cell">
+                        <strong>{{service.serviceName }}</strong>
+                        <small *ngIf="service.description">{{service.description}}</small>
+                    </div>
+                </td>
+                <td class="service-code">
+                    <span class="code-badge">{{service.code}}</span>
+                </td>
+                <td>{{service.responsable || '-'}}</td>
+                <td>
+                    <a *ngIf="service.email"
+                       [href]="'mailto:' + service.email"
+                       class="email-link">
+                        {{service.email}}
+                    </a>
+                    <span *ngIf="!service.email">-</span>
+                </td>
+                <td>
+                    <a *ngIf="service.telephone"
+                       [href]="'tel:' + service.telephone"
+                       class="phone-link">
+                        {{service.telephone}}
+                    </a>
+                    <span *ngIf="!service.telephone">-</span>
+                </td>
+                <td>
+            <span class="status-badge"
+                  [class.active]="service.actif"
+                  [class.inactive]="!service.actif">
+              {{service.actif ? 'Actif' : 'Inactif'}}
+            </span>
+                </td>
+                <td class="actions-cell">
+                    <div class="action-buttons">
+                        <button
+                                class="btn btn-sm btn-info"
+                                (click)="openViewModal(service)"
+                                title="Voir les détails">
+                            <i class="icon-eye"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-warning"
+                                (click)="openEditModal(service)"
+                                title="Modifier">
+                            <i class="icon-edit"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm"
+                                [class.btn-success]="!service.actif"
+                                [class.btn-secondary]="service.actif"
+                                (click)="toggleServiceStatus(service)"
+                                [title]="service.actif ? 'Désactiver' : 'Activer'">
+                            <i class="icon-power" [class.active]="service.actif"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger"
+                                (click)="deleteService(service)"
+                                title="Supprimer">
+                            <i class="icon-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+
+            <!-- Empty state -->
+            <tr *ngIf="pagedServices.empty" class="empty-row">
+                <td colspan="7" class="empty-cell">
+                    <div class="empty-state">
+                        <i class="icon-inbox"></i>
+                        <h3>Aucun service trouvé</h3>
+                        <p>{{searchForm.get('query')?.value ? 'Essayez avec d\'autres termes de recherche' : 'Commencez par créer votre premier service'}}</p>
+                        <button
+                                class="btn btn-primary"
+                                (click)="openCreateModal()"
+                                *ngIf="!searchForm.get('query')?.value">
+                            <i class="icon-plus"></i>
+                            Créer un service
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination-container" *ngIf="!pagedServices.empty && pagedServices.totalPages > 1">
+            <div class="pagination-info">
+                Affichage de {{(pagedServices.number * pagedServices.size) + 1}} à
+                {{Math.min((pagedServices.number + 1) * pagedServices.size, pagedServices.totalElements)}}
+                sur {{pagedServices.totalElements}} résultats
+            </div>
+            <div class="pagination-controls">
+                <button
+                        class="btn btn-sm btn-outline"
+                        [disabled]="pagedServices.first"
+                        (click)="onPageChange(0)">
+                    <i class="icon-chevrons-left"></i>
+                </button>
+                <button
+                        class="btn btn-sm btn-outline"
+                        [disabled]="pagedServices.first"
+                        (click)="onPageChange(pagedServices.number - 1)">
+                    <i class="icon-chevron-left"></i>
+                </button>
+
+                <span class="page-numbers">
+          <button
+                  *ngFor="let page of [].constructor(pagedServices.totalPages); let i = index"
+                  class="btn btn-sm"
+                  [class.btn-primary]="i === pagedServices.number"
+                  [class.btn-outline]="i !== pagedServices.number"
+                  (click)="onPageChange(i)"
+                  [hidden]="Math.abs(i - pagedServices.number) > 2 && i !== 0 && i !== pagedServices.totalPages - 1">
+            {{i + 1}}
+          </button>
+        </span>
+
+                <button
+                        class="btn btn-sm btn-outline"
+                        [disabled]="pagedServices.last"
+                        (click)="onPageChange(pagedServices.number + 1)">
+                    <i class="icon-chevron-right"></i>
+                </button>
+                <button
+                        class="btn btn-sm btn-outline"
+                        [disabled]="pagedServices.last"
+                        (click)="onPageChange(pagedServices.totalPages - 1)">
+                    <i class="icon-chevrons-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">{{modalTitle}}</h2>
+                <button class="btn btn-close" (click)="closeModal()">
+                    <i class="icon-x"></i>
+                </button>
+            </div>
+
+            <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" class="modal-body">
+                <div class="form-grid">
+                    <!-- Nom -->
+                    <div class="form-group">
+                        <label for="nom" class="form-label required">Nom du service</label>
+                        <input
+                                id="nom"
+                                type="text"
+                                formControlName="nom"
+                                class="form-control"
+                                [class.error]="serviceForm.get('nom')?.errors && serviceForm.get('nom')?.touched"
+                                placeholder="Ex: Direction des Ressources Humaines">
+                        <div class="error-message" *ngIf="getErrorMessage('nom')">
+                            {{getErrorMessage('nom')}}
+                        </div>
+                    </div>
+
+                    <!-- Code -->
+                    <div class="form-group">
+                        <label for="code" class="form-label required">Code</label>
+                        <input
+                                id="code"
+                                type="text"
+                                formControlName="code"
+                                class="form-control"
+                                [class.error]="serviceForm.get('code')?.errors && serviceForm.get('code')?.touched"
+                                placeholder="Ex: DRH">
+                        <div class="error-message" *ngIf="getErrorMessage('code')">
+                            {{getErrorMessage('code')}}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group full-width">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea
+                                id="description"
+                                formControlName="description"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Description du service et de ses missions..."></textarea>
+                        <div class="error-message" *ngIf="getErrorMessage('description')">
+                            {{getErrorMessage('description')}}
+                        </div>
+                    </div>
+
+                    <!-- Responsable -->
+                    <div class="form-group">
+                        <label for="responsable" class="form-label">Responsable</label>
+                        <input
+                                id="responsable"
+                                type="text"
+                                formControlName="responsable"
+                                class="form-control"
+                                placeholder="Nom du responsable">
+                        <div class="error-message" *ngIf="getErrorMessage('responsable')">
+                            {{getErrorMessage('responsable')}}
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input
+                                id="email"
+                                type="email"
+                                formControlName="email"
+                                class="form-control"
+                                [class.error]="serviceForm.get('email')?.errors && serviceForm.get('email')?.touched"
+                                placeholder="email@exemple.com">
+                        <div class="error-message" *ngIf="getErrorMessage('email')">
+                            {{getErrorMessage('email')}}
+                        </div>
+                    </div>
+
+                    <!-- Téléphone -->
+                    <div class="form-group">
+                        <label for="telephone" class="form-label">Téléphone</label>
+                        <input
+                                id="telephone"
+                                type="tel"
+                                formControlName="telephone"
+                                class="form-control"
+                                [class.error]="serviceForm.get('telephone')?.errors && serviceForm.get('telephone')?.touched"
+                                placeholder="+33 1 23 45 67 89">
+                        <div class="error-message" *ngIf="getErrorMessage('telephone')">
+                            {{getErrorMessage('telephone')}}
+                        </div>
+                    </div>
+
+                    <!-- Statut -->
+                    <div class="form-group">
+                        <label class="form-label">Statut</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input
+                                        type="checkbox"
+                                        formControlName="actif"
+                                        class="checkbox">
+                                <span class="checkbox-text">Service actif</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="modal-footer" *ngIf="modalMode !== 'view'">
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        (click)="closeModal()">
+                    Annuler
+                </button>
+                <button
+                        type="submit"
+                        class="btn btn-primary"
+                        [disabled]="serviceForm.invalid || loading"
+                        (click)="onSubmit()">
+          <span *ngIf="loading" class="loading-text">
+            <i class="spinner-small"></i>
+              {{modalMode === 'create' ? 'Création...' : 'Modification...'}}
+          </span>
+                    <span *ngIf="!loading">
+            {{modalMode === 'create' ? 'Créer' : 'Modifier'}}
+          </span>
+                </button>
+            </div>
+
+            <div class="modal-footer" *ngIf="modalMode === 'view'">
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        (click)="closeModal()">
+                    Fermer
+                </button>
+                <button
+                        type="button"
+                        class="btn btn-primary"
+                        (click)="openEditModal(currentService!)">
+                    Modifier
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
