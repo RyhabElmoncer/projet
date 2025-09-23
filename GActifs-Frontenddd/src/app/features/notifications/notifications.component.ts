@@ -4,6 +4,7 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged, interval } from
 import { FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 import { trigger, state, style, transition, animate, query, stagger } from '@angular/animations';
+import { NotificationService } from '../../core/services/NotificationService';
 
 // Models
 export interface Notification {
@@ -78,53 +79,6 @@ export interface NotificationStats {
 }
 
 // Service
-class NotificationService {
-  private readonly apiUrl = '/api/notifications';
-
-  constructor(private http: any) {}
-
-  getNotifications(filter?: NotificationFilter, page = 0, size = 50): any {
-    return this.http.get(`${this.apiUrl}`, { params: { ...filter, page, size } });
-  }
-
-  getNotificationsByUser(utilisateurId: number, statut?: StatutNotification): any {
-    return this.http.get(`${this.apiUrl}/user/${utilisateurId}`, {
-      params: { statut }
-    });
-  }
-
-  marquerCommeLue(notificationId: number): any {
-    return this.http.patch(`${this.apiUrl}/${notificationId}/lue`, {});
-  }
-
-  marquerToutesCommeLues(utilisateurId: number): any {
-    return this.http.patch(`${this.apiUrl}/user/${utilisateurId}/toutes-lues`, {});
-  }
-
-  archiverNotification(notificationId: number): any {
-    return this.http.patch(`${this.apiUrl}/${notificationId}/archiver`, {});
-  }
-
-  supprimerNotification(notificationId: number): any {
-    return this.http.delete(`${this.apiUrl}/${notificationId}`);
-  }
-
-  getStats(utilisateurId?: number): any {
-    return this.http.get(`${this.apiUrl}/stats`, {
-      params: { utilisateurId }
-    });
-  }
-
-  envoyerNotification(notification: Partial<Notification>): any {
-    return this.http.post(`${this.apiUrl}`, notification);
-  }
-
-  // WebSocket ou Server-Sent Events pour les notifications en temps réel
-  getNotificationsEnTempsReel(): any {
-    // Implémentation WebSocket/SSE
-    return new Subject<Notification>();
-  }
-}
 
 @Component({
   selector: 'app-notifications',
@@ -272,10 +226,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   private setupRealTimeNotifications(): void {
     this.notificationService.getNotificationsEnTempsReel()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((notification: Notification) => {
-          this.addNewNotification(notification);
-        });
+
   }
 
   // Data Loading
