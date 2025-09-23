@@ -4,6 +4,7 @@ import { AssetManagementComponent } from './features/asset-management/asset-mana
 import {DashboardComponent} from "./features/dashboard/dashboard/dashboard.component";
 import {ServiceDirectionComponent} from "./features/service-direction/service-direction.component";
 import {UserManagementComponent} from "./features/user-management/user-management.component";
+import {CategoryManagementComponent} from "./features/category-management/category-management.component";
 
 export const routes: Routes = [
   {
@@ -27,6 +28,11 @@ export const routes: Routes = [
         path: 'aservicedirection',
         component: ServiceDirectionComponent,
         title: 'Gestion Des Direction'
+      },
+      {
+        path: 'categories',
+        component: CategoryManagementComponent,
+        title: 'Gestion Catégories'
       },
       {
         path: 'users',

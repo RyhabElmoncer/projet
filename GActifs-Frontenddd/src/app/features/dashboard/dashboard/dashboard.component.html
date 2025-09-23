@@ -14,16 +14,8 @@
 
     <div class="header-right">
         <div class="header-actions">
-            <!-- Notifications -->
-
-
-            <!-- Settings -->
-
-
             <!-- User Menu -->
             <div class="user-menu">
-
-
                 <button class="logout-btn" (click)="logout()" title="Déconnexion">
                     <i class="bi bi-box-arrow-right"></i>
                     <span class="logout-text">Déconnexion</span>
@@ -37,12 +29,8 @@
 <div class="main-layout">
     <!-- Sidebar -->
     <aside #sidebar class="sidebar" [class.open]="sidebarOpen">
-
-
         <nav class="sidebar-nav">
             <ul class="nav-list">
-
-
                 <li class="nav-item">
                     <a routerLink="/dashboard/assetmanagement" class="nav-link" routerLinkActive="active">
                         <i class="bi bi-hdd-network nav-icon"></i>
@@ -53,18 +41,51 @@
                 <li class="nav-item">
                     <a routerLink="/dashboard/aservicedirection" class="nav-link" routerLinkActive="active">
                         <i class="bi bi-people nav-icon"></i>
-                        <span class="nav-text">Gestion Des Direction</span>
+                        <span class="nav-text">Gestion des Directions</span>
                     </a>
                 </li>
+
                 <li class="nav-item">
                     <a routerLink="/dashboard/users" class="nav-link" routerLinkActive="active">
-                        <i class="bi bi-people nav-icon"></i>
-                        <span class="nav-text">Gestions Utilisateurs</span>
+                        <i class="bi bi-person-lines-fill nav-icon"></i>
+                        <span class="nav-text">Gestion Utilisateurs</span>
                     </a>
                 </li>
 
+                <li class="nav-item">
+                    <a routerLink="/dashboard/reclamations" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-exclamation-triangle nav-icon"></i>
+                        <span class="nav-text">Réclamations</span>
+                    </a>
+                </li>
 
+                <li class="nav-item">
+                    <a routerLink="/dashboard/categories" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-tags nav-icon"></i>
+                        <span class="nav-text">Gestion Catégories</span>
+                    </a>
+                </li>
 
+                <li class="nav-item">
+                    <a routerLink="/dashboard/interventions" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-tools nav-icon"></i>
+                        <span class="nav-text">Gestion Interventions</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a routerLink="/dashboard/historique" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-clock-history nav-icon"></i>
+                        <span class="nav-text">Historique</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a routerLink="/dashboard/notifications" class="nav-link" routerLinkActive="active">
+                        <i class="bi bi-bell nav-icon"></i>
+                        <span class="nav-text">Notifications</span>
+                    </a>
+                </li>
 
                 <li class="nav-item">
                     <a routerLink="/dashboard/settings" class="nav-link" routerLinkActive="active">
@@ -74,8 +95,6 @@
                 </li>
             </ul>
         </nav>
-
-
     </aside>
 
     <!-- Main Content -->
@@ -85,3 +104,4 @@
         </div>
     </main>
 </div>
+
