@@ -1,0 +1,416 @@
+<!-- historique.component.html -->
+<div class="historique-container" [ngClass]="{'widget-mode': mode === 'widget'}">
+    <!-- Header -->
+    <div class="historique-header" *ngIf="mode === 'full'">
+        <h2 class="title">
+            <i class="fas fa-history"></i>
+            Historique {{ reclamationId ? 'de la réclamation #' + reclamationId : 'global' }}
+        </h2>
+
+        <div class="header-actions">
+            <button class="btn btn-outline" (click)="toggleStats()" *ngIf="!reclamationId">
+                <i class="fas" [ngClass]="showStats ? 'fa-chart-line' : 'fa-chart-line-off'"></i>
+                {{ showStats ? 'Masquer' : 'Afficher' }} les statistiques
+            </button>
+            <button class="btn btn-primary" (click)="exportHistorique()">
+                <i class="fas fa-download"></i>
+                Exporter
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="stats-section" *ngIf="showStats && mode === 'full' && !reclamationId">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-list-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">{{ stats.totalActions }}</span>
+                    <span class="stat-label">Actions totales</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">{{ stats.utilisateursActifs }}</span>
+                    <span class="stat-label">Utilisateurs actifs</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">{{ stats.actionsParJour.length }}</span>
+                    <span class="stat-label">Jours d'activité</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions by type chart -->
+        <div class="chart-section" *ngIf="Object.keys(stats.actionsParType).length > 0">
+            <h3>Actions par type</h3>
+            <div class="chart-bars">
+                <div
+                        class="chart-bar"
+                        *ngFor="let item of Object.keys(stats.actionsParType)"
+                        [style.width.%]="(stats.actionsParType[item] / stats.totalActions) * 100"
+
+                >
+                    <span class="bar-label">{{ item }} ({{ stats.actionsParType[item] }})</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section" [ngClass]="{'collapsed': mode === 'widget'}">
+        <div class="filters-header">
+            <h3 *ngIf="mode === 'full'">
+                <i class="fas fa-filter"></i>
+                Filtres
+            </h3>
+            <button class="btn btn-link" (click)="clearFilters()">
+                <i class="fas fa-times"></i>
+                Effacer
+            </button>
+        </div>
+
+        <div class="filters-grid">
+            <!-- Search -->
+            <div class="filter-group">
+                <label>Recherche</label>
+                <div class="search-input">
+                    <i class="fas fa-search"></i>
+                    <input
+                            type="text"
+                            [(ngModel)]="searchTerm"
+                            (ngModelChange)="onFilterChange()"
+                            placeholder="Rechercher dans l'historique..."
+                            class="form-control"
+                    >
+                </div>
+            </div>
+
+            <!-- Action Type -->
+            <div class="filter-group">
+                <label>Type d'action</label>
+                <select [(ngModel)]="filters.action" (ngModelChange)="onFilterChange()" class="form-select">
+                    <option [ngValue]="undefined">Tous les types</option>
+                    <option [ngValue]="action" *ngFor="let action of Object.values(TypeAction)">
+                        {{ action }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- User Role -->
+            <div class="filter-group">
+                <label>Rôle utilisateur</label>
+                <select [(ngModel)]="filters.roleUtilisateur" (ngModelChange)="onFilterChange()" class="form-select">
+                    <option [ngValue]="undefined">Tous les rôles</option>
+                    <option [ngValue]="role" *ngFor="let role of Object.values(RoleUtilisateur)">
+                        {{ role }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- User -->
+            <div class="filter-group">
+                <label>Utilisateur</label>
+                <input
+                        type="text"
+                        [(ngModel)]="filters.utilisateur"
+                        (ngModelChange)="onFilterChange()"
+                        placeholder="Nom d'utilisateur..."
+                        class="form-control"
+                >
+            </div>
+
+            <!-- Date Range -->
+            <div class="filter-group">
+                <label>Date début</label>
+                <input
+                        type="datetime-local"
+                        [(ngModel)]="dateDebutFilter"
+                        (ngModelChange)="onDateFilterChange()"
+                        class="form-control"
+                >
+            </div>
+
+            <div class="filter-group">
+                <label>Date fin</label>
+                <input
+                        type="datetime-local"
+                        [(ngModel)]="dateFinFilter"
+                        (ngModelChange)="onDateFilterChange()"
+                        class="form-control"
+                >
+            </div>
+        </div>
+    </div>
+
+    <!-- View Options -->
+    <div class="view-options" *ngIf="mode === 'full'">
+        <div class="view-toggles">
+            <button
+                    class="btn btn-toggle"
+                    [ngClass]="{'active': showDetails}"
+                    (click)="toggleDetails()"
+            >
+                <i class="fas fa-info-circle"></i>
+                Détails
+            </button>
+
+            <button
+                    class="btn btn-toggle"
+                    [ngClass]="{'active': groupByDate}"
+                    (click)="toggleGroupByDate()"
+            >
+                <i class="fas fa-calendar"></i>
+                Grouper par date
+            </button>
+        </div>
+
+        <div class="sort-options">
+            <span>Trier par:</span>
+            <button
+                    class="btn btn-sort"
+                    [ngClass]="{'active': sortField === 'dateAction'}"
+                    (click)="sort('dateAction')"
+            >
+                Date
+                <i
+                        class="fas"
+                        [ngClass]="sortField === 'dateAction' ? (sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                ></i>
+            </button>
+
+            <button
+                    class="btn btn-sort"
+                    [ngClass]="{'active': sortField === 'utilisateur'}"
+                    (click)="sort('utilisateur')"
+            >
+                Utilisateur
+                <i
+                        class="fas"
+                        [ngClass]="sortField === 'utilisateur' ? (sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                ></i>
+            </button>
+
+            <button
+                    class="btn btn-sort"
+                    [ngClass]="{'active': sortField === 'action'}"
+                    (click)="sort('action')"
+            >
+                Action
+                <i
+                        class="fas"
+                        [ngClass]="sortField === 'action' ? (sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort'"
+                ></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" *ngIf="loading">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Chargement...</span>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    <div class="results-info" *ngIf="!loading">
+    <span class="results-count">
+      {{ filteredEntries.length }} résultat{{ filteredEntries.length > 1 ? 's' : '' }}
+        <span *ngIf="filteredEntries.length !== historiqueEntries.length">
+        sur {{ historiqueEntries.length }}
+      </span>
+    </span>
+    </div>
+
+    <!-- Historique List -->
+    <div class="historique-content" *ngIf="!loading">
+        <!-- No results -->
+        <div class="no-results" *ngIf="filteredEntries.length === 0">
+            <i class="fas fa-search"></i>
+            <h3>Aucun résultat trouvé</h3>
+            <p>Essayez de modifier vos critères de recherche.</p>
+        </div>
+
+        <!-- Grouped by date view -->
+        <div class="grouped-view" *ngIf="groupByDate && filteredEntries.length > 0">
+            <div class="date-group" *ngFor="let dateGroup of Object.keys(groupEntriesByDate())">
+                <div class="date-header">
+                    <h4>{{ dateGroup | date:'fullDate':'':'fr' }}</h4>
+                    <span class="entry-count">{{ groupEntriesByDate()[dateGroup].length }} action{{ groupEntriesByDate()[dateGroup].length > 1 ? 's' : '' }}</span>
+                </div>
+                <div class="entries-list">
+                    <div
+                            class="entry-card"
+                            *ngFor="let entry of groupEntriesByDate()[dateGroup]"
+                            [ngClass]="'action-' + entry.action.toLowerCase()"
+                    >
+                        <div class="entry-main">
+                            <div class="entry-icon">
+                                <i class="fas" [ngClass]="getActionIcon(entry.action)" [style.color]="getActionColor(entry.action)"></i>
+                            </div>
+                            <div class="entry-content">
+                                <div class="entry-header">
+                                    <span class="entry-action">{{ entry.action }}</span>
+                                    <span class="entry-time">{{ entry.dateAction | date:'shortTime' }}</span>
+                                </div>
+                                <div class="entry-description">{{ formatActionDescription(entry) }}</div>
+                                <div class="entry-meta">
+                  <span class="entry-user">
+                    <i class="fas" [ngClass]="getRoleIcon(entry.roleUtilisateur)"></i>
+                      {{ entry.utilisateur }}
+                  </span>
+                                    <span class="entry-role">{{ entry.roleUtilisateur }}</span>
+                                    <span class="entry-reclamation" *ngIf="entry.reclamationNumero">
+                    Réclamation #{{ entry.reclamationNumero }}
+                  </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Details -->
+                        <div class="entry-details" *ngIf="showDetails && (entry.details || entry.adresseIP)">
+                            <div class="details-content">
+                                <div class="detail-item" *ngIf="entry.adresseIP">
+                                    <strong>Adresse IP:</strong> {{ entry.adresseIP }}
+                                </div>
+                                <div class="detail-item" *ngFor="let detail of Object.keys(entry.details || {})">
+                                    <strong>{{ detail }}:</strong> {{ entry.details![detail] }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standard list view -->
+        <div class="standard-view" *ngIf="!groupByDate && filteredEntries.length > 0">
+            <div class="entries-table">
+                <div class="table-header" *ngIf="mode === 'full'">
+                    <div class="header-cell action">Action</div>
+                    <div class="header-cell description">Description</div>
+                    <div class="header-cell user">Utilisateur</div>
+                    <div class="header-cell date">Date</div>
+                    <div class="header-cell reclamation" *ngIf="!reclamationId">Réclamation</div>
+                </div>
+
+                <div class="table-body">
+                    <div
+                            class="entry-row"
+                            *ngFor="let entry of paginatedEntries"
+                            [ngClass]="'action-' + entry.action.toLowerCase()"
+                    >
+                        <div class="entry-cell action-cell">
+                            <div class="action-badge" [style.background-color]="getActionColor(entry.action)">
+                                <i class="fas" [ngClass]="getActionIcon(entry.action)"></i>
+                                <span>{{ entry.action }}</span>
+                            </div>
+                        </div>
+
+                        <div class="entry-cell description-cell">
+                            <div class="description-text">{{ formatActionDescription(entry) }}</div>
+                            <div class="entry-details" *ngIf="showDetails && (entry.details || entry.adresseIP)">
+                                <div class="detail-tag" *ngIf="entry.adresseIP">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    {{ entry.adresseIP }}
+                                </div>
+                                <div class="detail-tag" *ngFor="let detail of Object.keys(entry.details || {})">
+                                    <strong>{{ detail }}:</strong> {{ entry.details![detail] }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-cell user-cell">
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    <i class="fas" [ngClass]="getRoleIcon(entry.roleUtilisateur)"></i>
+                                </div>
+                                <div class="user-details">
+                                    <span class="user-name">{{ entry.utilisateur }}</span>
+                                    <span class="user-role">{{ entry.roleUtilisateur }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="entry-cell date-cell">
+                            <div class="date-info">
+                                <span class="date">{{ entry.dateAction | date:'short' }}</span>
+                                <span class="relative-time">{{ getRelativeTime(entry.dateAction) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="entry-cell reclamation-cell" *ngIf="!reclamationId">
+              <span class="reclamation-link" *ngIf="entry.reclamationNumero">
+                #{{ entry.reclamationNumero }}
+              </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-section" *ngIf="totalPages > 1 && mode === 'full'">
+            <div class="pagination-info">
+                Page {{ currentPage }} sur {{ totalPages }}
+                ({{ paginatedEntries.length }} sur {{ filteredEntries.length }} entrées)
+            </div>
+
+            <div class="pagination-controls">
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === 1"
+                        (click)="changePage(1)"
+                >
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === 1"
+                        (click)="changePage(currentPage - 1)"
+                >
+                    <i class="fas fa-angle-left"></i>
+                </button>
+
+                <button
+                        class="btn btn-pagination"
+                        *ngFor="let page of getPageNumbers()"
+                        [ngClass]="{'active': page === currentPage}"
+                        (click)="changePage(page)"
+                >
+                    {{ page }}
+                </button>
+
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === totalPages"
+                        (click)="changePage(currentPage + 1)"
+                >
+                    <i class="fas fa-angle-right"></i>
+                </button>
+
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === totalPages"
+                        (click)="changePage(totalPages)"
+                >
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
