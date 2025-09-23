@@ -8,6 +8,7 @@ import {CategoryManagementComponent} from "./features/category-management/catego
 import {InterventionComponent} from "./features/intervention/intervention.component";
 import {ReclamationManagementComponent} from "./features/reclamation-management/reclamation-management.component";
 import {HistoriqueComponent} from "./features/historique/historique.component";
+import {NotificationsComponent} from "./features/notifications/notifications.component";
 
 export const routes: Routes = [
   {
@@ -51,6 +52,11 @@ export const routes: Routes = [
         path: 'users',
         component: UserManagementComponent,
         title: 'Gestion Des Utulisateurs'
+      },
+      {
+        path: 'notifications',
+        component: NotificationsComponent,
+        title: 'Gestion Des notifications'
       },
       {
         path: 'historique',

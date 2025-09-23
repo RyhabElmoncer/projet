@@ -1,0 +1,427 @@
+<!-- notifications.component.html -->
+<div class="notifications-container" [ngClass]="{'dropdown-mode': mode === 'dropdown', 'widget-mode': mode === 'widget'}">
+
+    <!-- Dropdown Trigger (for dropdown mode) -->
+    <div class="notification-trigger" *ngIf="mode === 'dropdown'" (click)="toggleDropdown()">
+        <i class="fas fa-bell notification-icon" [ngClass]="{'has-unread': stats.nonLues > 0}"></i>
+        <span class="notification-badge" *ngIf="stats.nonLues > 0" [@pulse]="pulseStates[0] || 'normal'">
+      {{ stats.nonLues > 99 ? '99+' : stats.nonLues }}
+    </span>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div
+            class="notifications-panel"
+            [ngClass]="{'open': isOpen || mode !== 'dropdown'}"
+            [@slideIn]="(isOpen || mode !== 'dropdown') ? 'in' : 'out'"
+            *ngIf="isOpen || mode !== 'dropdown'"
+    >
+
+        <!-- Header (for page and widget modes) -->
+        <div class="notifications-header" *ngIf="mode !== 'dropdown'">
+            <div class="header-title">
+                <i class="fas fa-bell"></i>
+                <h2>Notifications</h2>
+                <span class="notification-count" *ngIf="stats.nonLues > 0">({{ stats.nonLues }} non lues)</span>
+            </div>
+
+            <div class="header-actions">
+                <button
+                        class="btn btn-outline btn-sm"
+                        (click)="toggleFilters()"
+                        [ngClass]="{'active': showFilters}"
+                >
+                    <i class="fas fa-filter"></i>
+                    Filtres
+                </button>
+
+                <button
+                        class="btn btn-outline btn-sm"
+                        (click)="toggleViewMode()"
+                        *ngIf="mode === 'page'"
+                >
+                    <i class="fas" [ngClass]="viewMode === 'liste' ? 'fa-th-large' : 'fa-list'"></i>
+                    {{ viewMode === 'liste' ? 'Cartes' : 'Liste' }}
+                </button>
+
+                <button
+                        class="btn btn-primary btn-sm"
+                        (click)="marquerToutesCommeLues()"
+                        [disabled]="stats.nonLues === 0"
+                >
+                    <i class="fas fa-check-double"></i>
+                    Tout marquer comme lu
+                </button>
+            </div>
+        </div>
+
+        <!-- Dropdown Header -->
+        <div class="dropdown-header" *ngIf="mode === 'dropdown'">
+            <div class="dropdown-title">
+                <span>Notifications</span>
+                <span class="count" *ngIf="stats.nonLues > 0">({{ stats.nonLues }})</span>
+            </div>
+            <button class="btn-link" (click)="marquerToutesCommeLues()" *ngIf="stats.nonLues > 0">
+                <i class="fas fa-check-double"></i>
+            </button>
+        </div>
+
+        <!-- Statistics (for page mode) -->
+
+
+        <!-- Filters Section -->
+        <div class="filters-section" [ngClass]="{'expanded': showFilters}" *ngIf="mode !== 'dropdown'">
+            <div class="filters-content" *ngIf="showFilters">
+                <div class="filters-grid">
+                    <!-- Search -->
+                    <div class="filter-group">
+                        <label>Recherche</label>
+                        <div class="search-input">
+                            <i class="fas fa-search"></i>
+                            <input
+                                    type="text"
+                                    [(ngModel)]="searchTerm"
+                                    (ngModelChange)="onFilterChange()"
+                                    placeholder="Rechercher dans les notifications..."
+                                    class="form-control"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Type -->
+                    <div class="filter-group">
+                        <label>Type</label>
+                        <select [(ngModel)]="filters.type" (ngModelChange)="onFilterChange()" class="form-select">
+                            <option [ngValue]="undefined">Tous les types</option>
+                            <option [ngValue]="type" *ngFor="let type of getTypeNotificationValues()">
+                                {{ type }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Priority -->
+                    <div class="filter-group">
+                        <label>Priorité</label>
+                        <select [(ngModel)]="filters.priorite" (ngModelChange)="onFilterChange()" class="form-select">
+                            <option [ngValue]="undefined">Toutes les priorités</option>
+                            <option [ngValue]="priorite" *ngFor="let priorite of getPrioriteNotificationValues()">
+                                {{ priorite }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="filter-group">
+                        <label>Statut</label>
+                        <select [(ngModel)]="filters.statut" (ngModelChange)="onFilterChange()" class="form-select">
+                            <option [ngValue]="undefined">Tous les statuts</option>
+                            <option [ngValue]="statut" *ngFor="let statut of getStatutNotificationValues()">
+                                {{ statut }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="filter-group">
+                        <label>Date début</label>
+                        <input
+                                type="datetime-local"
+                                [(ngModel)]="dateDebutFilter"
+                                (ngModelChange)="onDateFilterChange()"
+                                class="form-control"
+                        >
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Date fin</label>
+                        <input
+                                type="datetime-local"
+                                [(ngModel)]="dateFinFilter"
+                                (ngModelChange)="onDateFilterChange()"
+                                class="form-control"
+                        >
+                    </div>
+                </div>
+
+                <div class="filters-actions">
+                    <button class="btn btn-outline btn-sm" (click)="clearFilters()">
+                        <i class="fas fa-times"></i>
+                        Effacer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading-overlay" *ngIf="loading">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Chargement des notifications...</span>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="notifications-content" *ngIf="!loading" [@listAnimation]>
+
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="paginatedNotifications.length === 0">
+                <i class="fas fa-bell-slash"></i>
+                <h3>Aucune notification</h3>
+                <p *ngIf="searchTerm || Object.keys(filters).length > 0">
+                    Aucune notification ne correspond à vos critères.
+                </p>
+                <p *ngIf="!searchTerm && Object.keys(filters).length === 0">
+                    Vous n'avez aucune notification pour le moment.
+                </p>
+            </div>
+
+            <!-- List View -->
+            <div class="notifications-list" *ngIf="paginatedNotifications.length > 0 && (viewMode === 'liste' || mode !== 'page')">
+                <div
+                        class="notification-item"
+                        *ngFor="let notification of paginatedNotifications; "
+                        [ngClass]="{
+            'unread': notification.statut === StatutNotification.NON_LUE,
+            'expired': isExpired(notification),
+            'selected': selectedNotification?.id === notification.id
+          }"
+                        (click)="onNotificationClick(notification)"
+                        [@pulse]="pulseStates[notification.id] || 'normal'"
+                >
+                    <div class="notification-icon">
+                        <i
+                                class="fas"
+                                [ngClass]="getTypeIcon(notification.type)"
+                                [style.color]="getTypeColor(notification.type)"
+                        ></i>
+                    </div>
+
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <div class="notification-title">{{ notification.titre }}</div>
+                            <div class="notification-meta">
+                                <span class="notification-time">{{ getRelativeTime(notification.dateCreation) }}</span>
+                                <span class="notification-priority" [style.color]="getPrioriteColor(notification.priorite)">
+                  <i class="fas" [ngClass]="getPrioriteIcon(notification.priorite)"></i>
+                </span>
+                            </div>
+                        </div>
+
+                        <div class="notification-message">{{ notification.message }}</div>
+
+                        <div class="notification-details" *ngIf="notification.reclamationNumero || notification.utilisateurNom">
+              <span class="detail-item" *ngIf="notification.reclamationNumero">
+                <i class="fas fa-ticket-alt"></i>
+                Réclamation #{{ notification.reclamationNumero }}
+              </span>
+                            <span class="detail-item" *ngIf="notification.utilisateurNom">
+                <i class="fas fa-user"></i>
+                                {{ notification.utilisateurNom }}
+              </span>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="notification-actions" *ngIf="notification.actions && notification.actions.length > 0">
+                            <button
+                                    class="btn btn-action"
+                                    *ngFor="let action of notification.actions"
+                                    (click)="$event.stopPropagation(); executerAction(notification, action.id)"
+                                    [style.background-color]="action.couleur"
+                            >
+                                <i class="fas" [ngClass]="action.icone"></i>
+                                {{ action.libelle }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="notification-controls" *ngIf="mode === 'page'">
+                        <button
+                                class="btn-control"
+                                title="Marquer comme {{ notification.statut === StatutNotification.NON_LUE ? 'lue' : 'non lue' }}"
+                                (click)="$event.stopPropagation(); marquerCommeLue(notification)"
+                                *ngIf="notification.statut === StatutNotification.NON_LUE"
+                        >
+                            <i class="fas fa-eye"></i>
+                        </button>
+
+                        <button
+                                class="btn-control"
+                                title="Archiver"
+                                (click)="$event.stopPropagation(); archiverNotification(notification)"
+                                *ngIf="notification.statut !== StatutNotification.ARCHIVEE"
+                        >
+                            <i class="fas fa-archive"></i>
+                        </button>
+
+                        <button
+                                class="btn-control danger"
+                                title="Supprimer"
+                                (click)="$event.stopPropagation(); supprimerNotification(notification)"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <!-- Unread Indicator -->
+                    <div class="unread-indicator" *ngIf="notification.statut === StatutNotification.NON_LUE"></div>
+                </div>
+            </div>
+
+            <!-- Cards View -->
+            <div class="notifications-cards" *ngIf="paginatedNotifications.length > 0 && viewMode === 'cartes' && mode === 'page'">
+                <div
+                        class="notification-card"
+                        *ngFor="let notification of paginatedNotifications; "
+                        [ngClass]="{
+            'unread': notification.statut === StatutNotification.NON_LUE,
+            'expired': isExpired(notification)
+          }"
+                        (click)="onNotificationClick(notification)"
+                        [@pulse]="pulseStates[notification.id] || 'normal'"
+                >
+                    <div class="card-header">
+                        <div class="card-type">
+                            <i
+                                    class="fas"
+                                    [ngClass]="getTypeIcon(notification.type)"
+                                    [style.color]="getTypeColor(notification.type)"
+                            ></i>
+                            <span class="type-label">{{ notification.type }}</span>
+                        </div>
+                        <div class="card-priority">
+              <span
+                      class="priority-badge"
+                      [style.background-color]="getPrioriteColor(notification.priorite)"
+              >
+                <i class="fas" [ngClass]="getPrioriteIcon(notification.priorite)"></i>
+                  {{ notification.priorite }}
+              </span>
+                        </div>
+                    </div>
+
+                    <div class="card-content">
+                        <h4 class="card-title">{{ notification.titre }}</h4>
+                        <p class="card-message">{{ notification.message }}</p>
+
+                        <div class="card-details">
+                            <div class="detail-row" *ngIf="notification.reclamationNumero">
+                                <i class="fas fa-ticket-alt"></i>
+                                <span>Réclamation #{{ notification.reclamationNumero }}</span>
+                            </div>
+                            <div class="detail-row" *ngIf="notification.utilisateurNom">
+                                <i class="fas fa-user"></i>
+                                <span>{{ notification.utilisateurNom }}</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-clock"></i>
+                                <span>{{ notification.dateCreation | date:'medium' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <div class="card-time">{{ getRelativeTime(notification.dateCreation) }}</div>
+
+                        <div class="card-controls">
+                            <button
+                                    class="btn-card-control"
+                                    title="Marquer comme lue"
+                                    (click)="$event.stopPropagation(); marquerCommeLue(notification)"
+                                    *ngIf="notification.statut === StatutNotification.NON_LUE"
+                            >
+                                <i class="fas fa-eye"></i>
+                            </button>
+
+                            <button
+                                    class="btn-card-control"
+                                    title="Archiver"
+                                    (click)="$event.stopPropagation(); archiverNotification(notification)"
+                                    *ngIf="notification.statut !== StatutNotification.ARCHIVEE"
+                            >
+                                <i class="fas fa-archive"></i>
+                            </button>
+
+                            <button
+                                    class="btn-card-control danger"
+                                    title="Supprimer"
+                                    (click)="$event.stopPropagation(); supprimerNotification(notification)"
+                            >
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Unread Indicator -->
+                    <div class="card-unread-indicator" *ngIf="notification.statut === StatutNotification.NON_LUE"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination (for page mode) -->
+        <div class="pagination-section" *ngIf="totalPages > 1 && mode === 'page' && !loading">
+            <div class="pagination-info">
+                Page {{ currentPage }} sur {{ totalPages }}
+                ({{ paginatedNotifications.length }} sur {{ filteredNotifications.length }} notifications)
+            </div>
+
+            <div class="pagination-controls">
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === 1"
+                        (click)="changePage(1)"
+                >
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === 1"
+                        (click)="changePage(currentPage - 1)"
+                >
+                    <i class="fas fa-angle-left"></i>
+                </button>
+
+                <button
+                        class="btn btn-pagination"
+                        *ngFor="let page of getPageNumbers()"
+                        [ngClass]="{'active': page === currentPage}"
+                        (click)="changePage(page)"
+                >
+                    {{ page }}
+                </button>
+
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === totalPages"
+                        (click)="changePage(currentPage + 1)"
+                >
+                    <i class="fas fa-angle-right"></i>
+                </button>
+
+                <button
+                        class="btn btn-pagination"
+                        [disabled]="currentPage === totalPages"
+                        (click)="changePage(totalPages)"
+                >
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer Actions (for dropdown mode) -->
+        <div class="dropdown-footer" *ngIf="mode === 'dropdown' && paginatedNotifications.length > 0">
+            <button class="btn btn-link btn-sm" routerLink="/notifications">
+                Voir toutes les notifications
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Overlay (for dropdown mode) -->
+    <div
+            class="dropdown-overlay"
+            *ngIf="mode === 'dropdown' && isOpen"
+            (click)="toggleDropdown()"
+    ></div>
+
+</div>
