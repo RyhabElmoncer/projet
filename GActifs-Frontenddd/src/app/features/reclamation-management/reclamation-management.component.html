@@ -1,0 +1,701 @@
+<!-- reclamation-management.component.html -->
+<div class="reclamation-management">
+    <!-- Header with Statistics -->
+    <div class="header-section">
+        <div class="page-title">
+            <h1>Gestion des Réclamations</h1>
+            <button class="btn btn-primary" (click)="openCreateModal()">
+                <i class="fas fa-plus"></i>
+                Nouvelle Réclamation
+            </button>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.total }}</h3>
+                    <p>Total</p>
+                </div>
+            </div>
+
+            <div class="stat-card nouvelles">
+                <div class="stat-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.nouvelles }}</h3>
+                    <p>Nouvelles</p>
+                </div>
+            </div>
+
+            <div class="stat-card en-cours">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.enCours }}</h3>
+                    <p>En Cours</p>
+                </div>
+            </div>
+
+            <div class="stat-card resolues">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.resolues }}</h3>
+                    <p>Résolues</p>
+                </div>
+            </div>
+
+            <div class="stat-card retard">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.enRetard }}</h3>
+                    <p>En Retard</p>
+                </div>
+            </div>
+
+            <div class="stat-card satisfaction">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>{{ stats.tauxSatisfaction | number:'1.1-1' }}%</h3>
+                    <p>Satisfaction</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <div class="filters-row">
+            <!-- Search -->
+            <div class="filter-group search-group">
+                <input
+                        type="text"
+                        placeholder="Rechercher par objet, description, réclamant..."
+                        [(ngModel)]="searchTerm"
+                        (input)="onFilterChange()"
+                        class="search-input">
+                <i class="fas fa-search"></i>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="filter-group">
+                <select [(ngModel)]="filters.statut" (change)="onFilterChange()" class="filter-select">
+                    <option value="">Tous les statuts</option>
+                    <option *ngFor="let statut of Object.keys(StatutReclamation)" [value]="statut">
+                        {{ statut.replace('_', ' ') }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="filter-group">
+                <select [(ngModel)]="filters.priorite" (change)="onFilterChange()" class="filter-select">
+                    <option value="">Toutes les priorités</option>
+                    <option *ngFor="let priorite of Object.keys(PrioriteReclamation)" [value]="priorite">
+                        {{ priorite }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- Type Filter -->
+            <div class="filter-group">
+                <select [(ngModel)]="filters.typeReclamation" (change)="onFilterChange()" class="filter-select">
+                    <option value="">Tous les types</option>
+                    <option *ngFor="let type of Object.keys(TypeReclamation)" [value]="type">
+                        {{ type }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- Actions -->
+            <div class="filter-actions">
+                <button class="btn btn-secondary" (click)="clearFilters()">
+                    <i class="fas fa-times"></i>
+                    Effacer
+                </button>
+                <button class="btn btn-outline" (click)="exportReclamations('excel')">
+                    <i class="fas fa-file-excel"></i>
+                    Excel
+                </button>
+                <button class="btn btn-outline" (click)="exportReclamations('pdf')">
+                    <i class="fas fa-file-pdf"></i>
+                    PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-section">
+        <div class="table-container">
+            <table class="reclamations-table">
+                <thead>
+                <tr>
+                    <th class="checkbox-column">
+                        <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()">
+                    </th>
+                    <th class="sortable" (click)="sort('numero')">
+                        N° Réclamation
+                        <i class="fas fa-sort" [ngClass]="{
+                'fa-sort-up': sortField === 'numero' && sortDirection === 'asc',
+                'fa-sort-down': sortField === 'numero' && sortDirection === 'desc'
+              }"></i>
+                    </th>
+                    <th class="sortable" (click)="sort('objet')">
+                        Objet
+                        <i class="fas fa-sort" [ngClass]="{
+                'fa-sort-up': sortField === 'objet' && sortDirection === 'asc',
+                'fa-sort-down': sortField === 'objet' && sortDirection === 'desc'
+              }"></i>
+                    </th>
+                    <th>Type</th>
+                    <th>Priorité</th>
+                    <th>Statut</th>
+                    <th>Réclamant</th>
+                    <th>Technicien</th>
+                    <th class="sortable" (click)="sort('dateCreation')">
+                        Date Création
+                        <i class="fas fa-sort" [ngClass]="{
+                'fa-sort-up': sortField === 'dateCreation' && sortDirection === 'asc',
+                'fa-sort-down': sortField === 'dateCreation' && sortDirection === 'desc'
+              }"></i>
+                    </th>
+                    <th>Échéance</th>
+                    <th class="actions-column">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let reclamation of paginatedReclamations"
+                    [ngClass]="{'retard': isEnRetard(reclamation)}">
+                    <td>
+                        <input type="checkbox"
+                               [checked]="selectedReclamations.has(reclamation.id!)"
+                               (change)="toggleInterventionSelection(reclamation.id!)">
+                    </td>
+                    <td class="numero-column">
+                        {{ reclamation.numero }}
+                    </td>
+                    <td class="objet-column">
+                        <div class="objet-content">
+                            <span class="objet-title">{{ reclamation.objet }}</span>
+                            <span class="objet-description">{{ reclamation.description | slice:0:100 }}{{reclamation.description && reclamation.description.length > 100 ? '...' : ''}}</span>
+                        </div>
+                    </td>
+                    <td>
+              <span class="badge badge-type badge-{{ reclamation.typeReclamation?.toLowerCase() }}">
+                {{ reclamation.typeReclamation }}
+              </span>
+                    </td>
+                    <td>
+              <span class="badge badge-priority"
+                    [style.background-color]="getPrioriteColor(reclamation.priorite)">
+                {{ reclamation.priorite }}
+              </span>
+                    </td>
+                    <td>
+             <span class="badge badge-status"
+                   [style.background-color]="getStatutColor(reclamation.statut)">
+{{ (reclamation.statut ?? '').replace('_', ' ') }}
+</span>
+
+                    </td>
+                    <td class="reclamant-column">
+                        <div class="reclamant-info">
+                            <span class="reclamant-name">{{ reclamation.reclamantNom }}</span>
+                            <span class="reclamant-email">{{ reclamation.reclamantEmail }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="technicien-assignment" *ngIf="reclamation.technicienAssigne; else noTechnicien">
+                            <span class="technicien-name">{{ reclamation.technicienAssigne.nom }} {{ reclamation.technicienAssigne.prenom }}</span>
+                        </div>
+                        <ng-template #noTechnicien><select class="mini-select"
+                                                           >
+                            <option value="">Assigner...</option>
+                            <option *ngFor="let tech of techniciens" [value]="tech.id">
+                                {{ tech.nom }} {{ tech.prenom }}
+                            </option>
+                        </select>
+                            <select class="mini-select" (change)="onTechnicienChange($event, reclamation)">
+                                <option value="">Assigner...</option>
+                                <option *ngFor="let tech of techniciens" [value]="tech.id">
+                                    {{ tech.nom }} {{ tech.prenom }}
+                                </option>
+                            </select>
+
+                        </ng-template>
+                    </td>
+                    <td class="date-column">
+                        {{ reclamation.dateCreation | date:'dd/MM/yyyy HH:mm' }}
+                    </td>
+                    <td class="date-column">
+              <span *ngIf="reclamation.dateEcheance"
+                    [ngClass]="{'text-danger': isEnRetard(reclamation)}">
+                {{ reclamation.dateEcheance | date:'dd/MM/yyyy' }}
+              </span>
+                        <span *ngIf="!reclamation.dateEcheance" class="text-muted">-</span>
+                    </td>
+                    <td class="actions-column">
+                        <div class="actions-dropdown">
+                            <button class="btn btn-sm btn-outline dropdown-toggle" type="button">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" (click)="openDetailsModal(reclamation)">
+                                    <i class="fas fa-eye"></i> Détails
+                                </a>
+                                <a class="dropdown-item" (click)="openEditModal(reclamation)">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </a>
+                                <a class="dropdown-item" (click)="openCommentModal(reclamation)">
+                                    <i class="fas fa-comment"></i> Commenter
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <div class="dropdown-submenu">
+                                    <a class="dropdown-item">
+                                        <i class="fas fa-exchange-alt"></i> Changer statut
+                                    </a>
+                                    <div class="dropdown-submenu-content">
+                                        <a class="dropdown-item"
+                                           *ngFor="let statut of Object.keys(StatutReclamation)"
+                                           (click)="changerStatut(reclamation, statut)"
+                                           [ngClass]="{'active': reclamation.statut === statut}">
+                                            {{ statut.replace('_', ' ') }}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-danger" (click)="deleteReclamation(reclamation)">
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-section" *ngIf="totalPages > 1">
+            <div class="pagination-info">
+                Affichage de {{ (currentPage - 1) * pageSize + 1 }} à
+                {{ Math.min(currentPage * pageSize, filteredReclamations.length) }}
+                sur {{ filteredReclamations.length }} réclamations
+            </div>
+            <div class="pagination-controls">
+                <button class="btn btn-sm"
+                        [disabled]="currentPage === 1"
+                        (click)="changePage(currentPage - 1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <button *ngFor="let page of getPageNumbers()"
+                        class="btn btn-sm"
+                        [ngClass]="{'active': page === currentPage}"
+                        (click)="changePage(page)">
+                    {{ page }}
+                </button>
+
+                <button class="btn btn-sm"
+                        [disabled]="currentPage === totalPages"
+                        (click)="changePage(currentPage + 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Create/Edit Reclamation -->
+    <div class="modal-overlay" *ngIf="showReclamationModal" (click)="closeModal()">
+        <div class="modal-content large-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ isEditMode ? 'Modifier la réclamation' : 'Nouvelle réclamation' }}</h2>
+                <button class="close-btn" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form class="reclamation-form">
+                    <div class="form-row">
+                        <div class="form-group col-8">
+                            <label>Objet *</label>
+                            <input type="text"
+                                   [(ngModel)]="currentReclamation.objet"
+                                   name="objet"
+                                   placeholder="Objet de la réclamation"
+                                   class="form-control" required>
+                        </div>
+                        <div class="form-group col-4">
+                            <label>Type *</label>
+                            <select [(ngModel)]="currentReclamation.typeReclamation"
+                                    name="typeReclamation"
+                                    class="form-control" required>
+                                <option *ngFor="let type of Object.keys(TypeReclamation)" [value]="type">
+                                    {{ type }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description *</label>
+                        <textarea [(ngModel)]="currentReclamation.description"
+                                  name="description"
+                                  placeholder="Description détaillée de la réclamation"
+                                  class="form-control"
+                                  rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label>Priorité *</label>
+                            <select [(ngModel)]="currentReclamation.priorite"
+                                    name="priorite"
+                                    class="form-control" required>
+                                <option *ngFor="let priorite of Object.keys(PrioriteReclamation)" [value]="priorite">
+                                    {{ priorite }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6" *ngIf="isEditMode">
+                            <label>Statut</label>
+                            <select [(ngModel)]="currentReclamation.statut"
+                                    name="statut"
+                                    class="form-control">
+                                <option *ngFor="let statut of Object.keys(StatutReclamation)" [value]="statut">
+                                    {{ statut.replace('_', ' ') }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Informations du réclamant</h3>
+                        <div class="form-row">
+                            <div class="form-group col-4">
+                                <label>Nom *</label>
+                                <input type="text"
+                                       [(ngModel)]="currentReclamation.reclamantNom"
+                                       name="reclamantNom"
+                                       class="form-control" required>
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Email *</label>
+                                <input type="email"
+                                       [(ngModel)]="currentReclamation.reclamantEmail"
+                                       name="reclamantEmail"
+                                       class="form-control" required>
+                            </div>
+                            <div class="form-group col-4">
+                                <label>Téléphone</label>
+                                <input type="tel"
+                                       [(ngModel)]="currentReclamation.reclamantTelephone"
+                                       name="reclamantTelephone"
+                                       class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label>Service</label>
+                            <select [(ngModel)]="currentReclamation.serviceDirection"
+                                    name="serviceDirection"
+                                    class="form-control">
+                                <option value="">Sélectionner un service</option>
+                                <option *ngFor="let service of services" [value]="service">
+                                    {{ service.serviceName }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label>Actif concerné</label>
+                            <select [(ngModel)]="currentReclamation.asset"
+                                    name="asset"
+                                    class="form-control">
+                                <option value="">Sélectionner un actif</option>
+                                <option *ngFor="let asset of assets" [value]="asset">
+                                    {{ asset.nom }} ({{ asset.numeroSerie }})
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" *ngIf="!isEditMode">
+                        <label>Pièces jointes</label>
+                        <input type="file"
+                               (change)="onFileSelected($event)"
+                               class="form-control"
+                               multiple
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                        <small class="form-text">Formats acceptés: PDF, DOC, XLS, JPG, PNG (5MB max par fichier)</small>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="closeModal()">Annuler</button>
+                <button class="btn btn-primary"
+                        (click)="saveReclamation()"
+                        [disabled]="saving">
+                    <i class="fas fa-spinner fa-spin" *ngIf="saving"></i>
+                    {{ saving ? 'Enregistrement...' : (isEditMode ? 'Modifier' : 'Créer') }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Details -->
+    <div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeModal()">
+        <div class="modal-content extra-large-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title-section">
+                    <h2>Détails de la réclamation #{{ currentReclamation.numero }}</h2>
+                    <div class="status-badges">
+            <span class="badge badge-priority"
+                  [style.background-color]="getPrioriteColor(currentReclamation.priorite!)">
+              {{ currentReclamation.priorite }}
+            </span>
+
+                    </div>
+                </div>
+                <button class="close-btn" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="details-grid">
+                    <!-- Information principale -->
+                    <div class="details-section">
+                        <h3>Informations générales</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Objet:</label>
+                                <span>{{ currentReclamation.objet }}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Type:</label>
+                                <span>{{ currentReclamation.typeReclamation }}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Date de création:</label>
+                                <span>{{ currentReclamation.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="currentReclamation.dateEcheance">
+                                <label>Date d'échéance:</label>
+
+                            </div>
+                            <div class="info-item" *ngIf="currentReclamation.dateResolution">
+                                <label>Date de résolution:</label>
+                                <span>{{ currentReclamation.dateResolution | date:'dd/MM/yyyy HH:mm' }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="currentReclamation.tempsResolution">
+                                <label>Temps de résolution:</label>
+                                <span>{{ formatDuration(currentReclamation.tempsResolution) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="description-section">
+                            <label>Description:</label>
+                            <p class="description-text">{{ currentReclamation.description }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Réclamant -->
+                    <div class="details-section">
+                        <h3>Réclamant</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Nom:</label>
+                                <span>{{ currentReclamation.reclamantNom }}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Email:</label>
+                                <span>{{ currentReclamation.reclamantEmail }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="currentReclamation.reclamantTelephone">
+                                <label>Téléphone:</label>
+                                <span>{{ currentReclamation.reclamantTelephone }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignation -->
+                    <div class="details-section">
+                        <h3>Assignation</h3>
+                        <div class="info-grid">
+                            <div class="info-item" *ngIf="currentReclamation.technicienAssigne">
+                                <label>Technicien assigné:</label>
+                                <span>{{ currentReclamation.technicienAssigne.nom }} {{ currentReclamation.technicienAssigne.prenom }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="currentReclamation.serviceDirection">
+                                <label>Service:</label>
+                                <span>{{ currentReclamation.serviceDirection.serviceName }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="currentReclamation.asset">
+                                <label>Actif concerné:</label>
+                                <span>{{ currentReclamation.asset.nom }} ({{ currentReclamation.asset.numeroSerie }})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Résolution -->
+                    <div class="details-section" *ngIf="currentReclamation.resolution || currentReclamation.cout">
+                        <h3>Résolution</h3>
+                        <div class="info-grid">
+                            <div class="info-item" *ngIf="currentReclamation.resolution">
+                                <label>Résolution:</label>
+                                <p class="resolution-text">{{ currentReclamation.resolution }}</p>
+                            </div>
+                            <div class="info-item" *ngIf="currentReclamation.cout">
+                                <label>Coût:</label>
+                                <span>{{ currentReclamation.cout | currency:'EUR':'symbol':'1.2-2' }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="currentReclamation.satisfactionClient">
+                                <label>Satisfaction client:</label>
+                                <div class="rating">
+                                    <i class="fas fa-star"
+                                       *ngFor="let i of [1,2,3,4,5]"
+                                       [ngClass]="{'active': i <= currentReclamation.satisfactionClient!}"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pièces jointes -->
+                <div class="attachments-section" *ngIf="pieceJointes.length > 0">
+                    <h3>Pièces jointes</h3>
+                    <div class="attachments-grid">
+                        <div class="attachment-item" *ngFor="let piece of pieceJointes">
+                            <div class="attachment-icon">
+                                <i class="fas" [ngClass]="{
+                  'fa-file-pdf': piece.typeFichier.includes('pdf'),
+                  'fa-file-word': piece.typeFichier.includes('doc'),
+                  'fa-file-excel': piece.typeFichier.includes('xls'),
+                  'fa-file-image': piece.typeFichier.includes('image'),
+                  'fa-file': !piece.typeFichier.includes('pdf') && !piece.typeFichier.includes('doc') && !piece.typeFichier.includes('xls') && !piece.typeFichier.includes('image')
+                }"></i>
+                            </div>
+                            <div class="attachment-info">
+                                <span class="attachment-name">{{ piece.nomFichier }}</span>
+                                <span class="attachment-size">{{ (piece.tailleFichier / 1024 / 1024) | number:'1.1-1' }} MB</span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commentaires -->
+                <div class="comments-section">
+                    <h3>Historique des commentaires</h3>
+                    <div class="comments-timeline" *ngIf="commentaires.length > 0; else noComments">
+                        <div class="comment-item" *ngFor="let comment of commentaires">
+                            <div class="comment-header">
+                                <div class="comment-author">
+                                    <i class="fas" [ngClass]="{
+                    'fa-user': comment.typeAuteur === 'RECLAMANT',
+                    'fa-user-tie': comment.typeAuteur === 'TECHNICIEN',
+                    'fa-user-cog': comment.typeAuteur === 'ADMIN'
+                  }"></i>
+                                    <span>{{ comment.auteur }}</span>
+                                    <span class="comment-type">({{ comment.typeAuteur }})</span>
+                                </div>
+                                <span class="comment-date">{{ comment.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+                            </div>
+                            <div class="comment-content">
+                                {{ comment.contenu }}
+                            </div>
+                            <div class="comment-attachments" *ngIf="comment.pieceJointes && comment.pieceJointes.length > 0">
+                                <small>Pièces jointes:</small>
+                                <div class="mini-attachments">
+                  <span *ngFor="let piece of comment.pieceJointes" class="mini-attachment">
+                    <i class="fas fa-paperclip"></i>
+                      {{ piece.nomFichier }}
+                  </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <ng-template #noComments>
+                        <p class="no-comments">Aucun commentaire pour le moment</p>
+                    </ng-template>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="closeModal()">Fermer</button>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Comment -->
+    <div class="modal-overlay" *ngIf="showCommentModal" (click)="closeModal()">
+        <div class="modal-content medium-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Ajouter un commentaire</h2>
+                <button class="close-btn" (click)="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form class="comment-form">
+                    <div class="form-group">
+                        <label>Commentaire *</label>
+                        <textarea [(ngModel)]="newComment"
+                                  name="comment"
+                                  placeholder="Votre commentaire..."
+                                  class="form-control"
+                                  rows="5" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pièces jointes</label>
+                        <input type="file"
+                               (change)="onFileSelected($event)"
+                               class="form-control"
+                               multiple
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                        <small class="form-text">Optionnel - Formats acceptés: PDF, DOC, XLS, JPG, PNG</small>
+                    </div>
+
+                    <div class="selected-files" *ngIf="selectedFiles.length > 0">
+                        <h4>Fichiers sélectionnés:</h4>
+                        <ul class="files-list">
+                            <li *ngFor="let file of selectedFiles">
+                                <i class="fas fa-file"></i>
+                                {{ file.name }} ({{ (file.size / 1024 / 1024) | number:'1.1-1' }} MB)
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="closeModal()">Annuler</button>
+                <button class="btn btn-primary"
+                        (click)="ajouterCommentaire()"
+                        [disabled]="!newComment.trim()">
+                    <i class="fas fa-paper-plane"></i>
+                    Envoyer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

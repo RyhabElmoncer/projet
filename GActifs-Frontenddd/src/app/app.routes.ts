@@ -6,6 +6,7 @@ import {ServiceDirectionComponent} from "./features/service-direction/service-di
 import {UserManagementComponent} from "./features/user-management/user-management.component";
 import {CategoryManagementComponent} from "./features/category-management/category-management.component";
 import {InterventionComponent} from "./features/intervention/intervention.component";
+import {ReclamationManagementComponent} from "./features/reclamation-management/reclamation-management.component";
 
 export const routes: Routes = [
   {
@@ -39,6 +40,11 @@ export const routes: Routes = [
         path: 'interventions',
         component: InterventionComponent,
         title: 'Gestion Interventions'
+      },
+      {
+        path: 'reclamations',
+        component: ReclamationManagementComponent,
+        title: 'Gestion reclamations'
       },
       {
         path: 'users',
