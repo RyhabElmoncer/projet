@@ -1,6 +1,6 @@
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -16,10 +16,16 @@ import {
   Technicien, TypeIntervention
 } from '../../shared/models/Intervention';
 import {InterventionService, TechnicienService} from "../../core/services/intervention.service";
+import {DatePipe, SlicePipe} from "@angular/common";
 
 @Component({
   selector: 'app-intervention',
   templateUrl: './intervention.component.html',
+  imports: [
+    ReactiveFormsModule,
+    SlicePipe,
+    DatePipe
+  ],
   styleUrls: ['./intervention.component.scss']
 })
 export class InterventionComponent implements OnInit, OnDestroy {
@@ -534,4 +540,5 @@ export class InterventionComponent implements OnInit, OnDestroy {
   }
 
   protected readonly Math = Math;
+  protected readonly StatutIntervention = StatutIntervention;
 }

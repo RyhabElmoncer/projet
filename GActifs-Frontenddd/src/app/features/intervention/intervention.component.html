@@ -87,7 +87,7 @@
                 <i class="icon-alert-triangle"></i>
             </div>
             <div class="stat-content">
-                <h3>{{stats.critiques}}</h3>
+                <h3>{{stats?.critiques}}</h3>
                 <p>Critiques</p>
             </div>
         </div>
@@ -96,7 +96,7 @@
                 <i class="icon-clock"></i>
             </div>
             <div class="stat-content">
-                <h3>{{stats.enCours}}</h3>
+                <h3>{{stats?.enCours}}</h3>
                 <p>En cours</p>
             </div>
         </div>
@@ -105,7 +105,7 @@
                 <i class="icon-check-circle"></i>
             </div>
             <div class="stat-content">
-                <h3>{{stats.terminees}}</h3>
+                <h3>{{stats?.terminees}}</h3>
                 <p>Terminées</p>
             </div>
         </div>
@@ -114,7 +114,7 @@
                 <i class="icon-calendar-x"></i>
             </div>
             <div class="stat-content">
-                <h3>{{stats.enRetard}}</h3>
+                <h3>{{stats?.enRetard}}</h3>
                 <p>En retard</p>
             </div>
         </div>
@@ -250,15 +250,14 @@
                         </button>
                         <button
                                 class="btn btn-sm btn-success"
-                                (click)="changeStatus(intervention, 'EN_COURS')"
+                                (click)="changeStatus(intervention, StatutIntervention.EN_COURS)"
                                 *ngIf="intervention.statut === 'PLANIFIEE' || intervention.statut === 'EN_ATTENTE'"
                                 title="Démarrer">
                             <i class="icon-play"></i>
                         </button>
                         <button
                                 class="btn btn-sm btn-primary"
-                                (click)="changeStatus(intervention, 'TERMINEE')"
-                                *ngIf="intervention.statut === 'EN_COURS'"
+                                (click)="changeStatus(intervention, StatutIntervention.TERMINEE)"                                *ngIf="intervention.statut === 'EN_COURS'"
                                 title="Terminer">
                             <i class="icon-check"></i>
                         </button>
