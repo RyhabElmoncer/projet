@@ -5,6 +5,7 @@ import {DashboardComponent} from "./features/dashboard/dashboard/dashboard.compo
 import {ServiceDirectionComponent} from "./features/service-direction/service-direction.component";
 import {UserManagementComponent} from "./features/user-management/user-management.component";
 import {CategoryManagementComponent} from "./features/category-management/category-management.component";
+import {InterventionComponent} from "./features/intervention/intervention.component";
 
 export const routes: Routes = [
   {
@@ -33,6 +34,11 @@ export const routes: Routes = [
         path: 'categories',
         component: CategoryManagementComponent,
         title: 'Gestion Catégories'
+      },
+      {
+        path: 'interventions',
+        component: InterventionComponent,
+        title: 'Gestion Interventions'
       },
       {
         path: 'users',
