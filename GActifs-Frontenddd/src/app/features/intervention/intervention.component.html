@@ -1,0 +1,563 @@
+// intervention.component.html
+<div class="intervention-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1 class="page-title">
+                <i class="icon-tool"></i>
+                Gestion des Interventions
+            </h1>
+            <button
+                    class="btn btn-primary btn-create"
+                    (click)="openCreateModal()"
+                    [disabled]="loading">
+                <i class="icon-plus"></i>
+                Nouvelle Intervention
+            </button>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="search-section">
+        <form [formGroup]="searchForm" class="search-form">
+            <div class="search-input-group">
+                <i class="icon-search"></i>
+                <input
+                        type="text"
+                        formControlName="query"
+                        placeholder="Rechercher par titre, description..."
+                        class="search-input">
+                <button type="button" class="btn-clear">
+                    <i class="icon-x"></i>
+                </button>
+            </div>
+        </form>
+
+        <!-- Filtres avancés -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <select formControlName="statut" class="filter-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="PLANIFIEE">Planifiée</option>
+                    <option value="EN_ATTENTE">En attente</option>
+                    <option value="EN_COURS">En cours</option>
+                    <option value="SUSPENDUE">Suspendue</option>
+                    <option value="TERMINEE">Terminée</option>
+                    <option value="ANNULEE">Annulée</option>
+                    <option value="VALIDEE">Validée</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <select formControlName="priorite" class="filter-select">
+                    <option value="">Toutes les priorités</option>
+                    <option value="CRITIQUE">Critique</option>
+                    <option value="HAUTE">Haute</option>
+                    <option value="MOYENNE">Moyenne</option>
+                    <option value="BASSE">Basse</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <select formControlName="typeIntervention" class="filter-select">
+                    <option value="">Tous les types</option>
+                    <option value="MAINTENANCE_PREVENTIVE">Maintenance Préventive</option>
+                    <option value="MAINTENANCE_CORRECTIVE">Maintenance Corrective</option>
+                    <option value="REPARATION">Réparation</option>
+                    <option value="INSTALLATION">Installation</option>
+                    <option value="CONFIGURATION">Configuration</option>
+                    <option value="MISE_A_JOUR">Mise à jour</option>
+                    <option value="DIAGNOSTIC">Diagnostic</option>
+                    <option value="AUTRE">Autre</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-overlay" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Chargement en cours...</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid" *ngIf="stats && !loading">
+        <div class="stat-card">
+            <div class="stat-icon critical">
+                <i class="icon-alert-triangle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{stats.critiques}}</h3>
+                <p>Critiques</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon in-progress">
+                <i class="icon-clock"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{stats.enCours}}</h3>
+                <p>En cours</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon completed">
+                <i class="icon-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{stats.terminees}}</h3>
+                <p>Terminées</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon overdue">
+                <i class="icon-calendar-x"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{stats.enRetard}}</h3>
+                <p>En retard</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interventions Table -->
+    <div class="table-container" *ngIf="!loading">
+        <div class="table-header">
+            <div class="table-info">
+        <span class="results-count">
+          {{pagedInterventions.totalElements}} intervention(s) trouvée(s)
+        </span>
+            </div>
+            <div class="table-controls">
+                <select
+                        class="page-size-select"
+                        [value]="pageRequest.size"
+                        (change)="onPageSizeChange(+$any($event).target.value)">
+                    <option value="5">5 par page</option>
+                    <option value="10">10 par page</option>
+                    <option value="20">20 par page</option>
+                    <option value="50">50 par page</option>
+                </select>
+            </div>
+        </div>
+
+        <table class="interventions-table">
+            <thead>
+            <tr>
+                <th
+                        class="sortable"
+                        [class.sorted]="pageRequest.sort === 'titre'"
+                        [class.asc]="pageRequest.sort === 'titre' && pageRequest.direction === 'asc'"
+                        [class.desc]="pageRequest.sort === 'titre' && pageRequest.direction === 'desc'"
+                        (click)="onSortChange('titre')">
+                    Titre
+                    <i class="sort-icon"></i>
+                </th>
+                <th>Type</th>
+                <th
+                        class="sortable"
+                        [class.sorted]="pageRequest.sort === 'priorite'"
+                        [class.asc]="pageRequest.sort === 'priorite' && pageRequest.direction === 'asc'"
+                        [class.desc]="pageRequest.sort === 'priorite' && pageRequest.direction === 'desc'"
+                        (click)="onSortChange('priorite')">
+                    Priorité
+                    <i class="sort-icon"></i>
+                </th>
+                <th
+                        class="sortable"
+                        [class.sorted]="pageRequest.sort === 'statut'"
+                        [class.asc]="pageRequest.sort === 'statut' && pageRequest.direction === 'asc'"
+                        [class.desc]="pageRequest.sort === 'statut' && pageRequest.direction === 'desc'"
+                        (click)="onSortChange('statut')">
+                    Statut
+                    <i class="sort-icon"></i>
+                </th>
+                <th>Technicien</th>
+                <th
+                        class="sortable"
+                        [class.sorted]="pageRequest.sort === 'dateEcheance'"
+                        [class.asc]="pageRequest.sort === 'dateEcheance' && pageRequest.direction === 'asc'"
+                        [class.desc]="pageRequest.sort === 'dateEcheance' && pageRequest.direction === 'desc'"
+                        (click)="onSortChange('dateEcheance')">
+                    Échéance
+                    <i class="sort-icon"></i>
+                </th>
+                <th>Asset</th>
+                <th class="actions-column">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let intervention of pagedInterventions.content;"
+                [class.overdue]="isOverdue(intervention)"
+                [class.critical]="intervention.priorite === 'CRITIQUE'">
+                <td class="intervention-title">
+                    <div class="title-cell">
+                        <strong>{{intervention.titre}}</strong>
+                        <small *ngIf="intervention.description">{{intervention.description | slice:0:50}}{{intervention.description.length > 50 ? '...' : ''}}</small>
+                    </div>
+                </td>
+                <td>
+            <span class="type-badge" [class]="getTypeClass(intervention.typeIntervention)">
+              {{getTypeLabel(intervention.typeIntervention)}}
+            </span>
+                </td>
+                <td>
+            <span class="priority-badge" [class]="getPriorityClass(intervention.priorite)">
+              {{getPriorityLabel(intervention.priorite)}}
+            </span>
+                </td>
+                <td>
+            <span class="status-badge" [class]="getStatusClass(intervention.statut)">
+              {{getStatusLabel(intervention.statut)}}
+            </span>
+                </td>
+                <td>
+                    <div class="technician-info" *ngIf="intervention.technicienAssigne">
+                        <span class="technician-name">{{intervention.technicienAssigne.prenom}} {{intervention.technicienAssigne.nom}}</span>
+                        <small *ngIf="intervention.technicienAssigne.specialite">{{intervention.technicienAssigne.specialite}}</small>
+                    </div>
+                    <span *ngIf="!intervention.technicienAssigne" class="unassigned">Non assigné</span>
+                </td>
+                <td class="date-cell">
+                    <div class="date-info">
+                        <span class="date">{{intervention.dateEcheance | date:'dd/MM/yyyy'}}</span>
+                        <span class="time">{{intervention.dateEcheance | date:'HH:mm'}}</span>
+                        <span *ngIf="isOverdue(intervention)" class="overdue-indicator">
+                <i class="icon-alert-triangle"></i>
+                En retard
+              </span>
+                    </div>
+                </td>
+                <td>
+            <span *ngIf="intervention.asset" class="asset-link">
+              {{intervention.asset.nom}}
+            </span>
+                    <span *ngIf="!intervention.asset">-</span>
+                </td>
+                <td class="actions-cell">
+                    <div class="action-buttons">
+                        <button
+                                class="btn btn-sm btn-info"
+                                (click)="openViewModal(intervention)"
+                                title="Voir les détails">
+                            <i class="icon-eye"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-warning"
+                                (click)="openEditModal(intervention)"
+                                title="Modifier">
+                            <i class="icon-edit"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-success"
+                                (click)="changeStatus(intervention, 'EN_COURS')"
+                                *ngIf="intervention.statut === 'PLANIFIEE' || intervention.statut === 'EN_ATTENTE'"
+                                title="Démarrer">
+                            <i class="icon-play"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-primary"
+                                (click)="changeStatus(intervention, 'TERMINEE')"
+                                *ngIf="intervention.statut === 'EN_COURS'"
+                                title="Terminer">
+                            <i class="icon-check"></i>
+                        </button>
+                        <button
+                                class="btn btn-sm btn-danger"
+                                (click)="deleteIntervention(intervention)"
+                                title="Supprimer">
+                            <i class="icon-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+
+            <!-- Empty state -->
+            <tr *ngIf="pagedInterventions.empty" class="empty-row">
+                <td colspan="8" class="empty-cell">
+                    <div class="empty-state">
+                        <i class="icon-tool"></i>
+                        <h3>Aucune intervention trouvée</h3>
+                        <p>{{hasFilters() ? 'Essayez de modifier vos critères de recherche' : 'Commencez par créer votre première intervention'}}</p>
+                        <button
+                                class="btn btn-primary"
+                                (click)="openCreateModal()"
+                                *ngIf="!hasFilters()">
+                            <i class="icon-plus"></i>
+                            Créer une intervention
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="pagination-container" *ngIf="!pagedInterventions.empty && pagedInterventions.totalPages > 1">
+            <div class="pagination-info">
+                Affichage de {{(pagedInterventions.number * pagedInterventions.size) + 1}} à
+                {{Math.min((pagedInterventions.number + 1) * pagedInterventions.size, pagedInterventions.totalElements)}}
+                sur {{pagedInterventions.totalElements}} résultats
+            </div>
+            <div class="pagination-controls">
+                <button
+                        class="btn btn-sm btn-outline"
+                        [disabled]="pagedInterventions.first"
+                        (click)="onPageChange(0)">
+                    <i class="icon-chevrons-left"></i>
+                </button>
+                <button
+                        class="btn btn-sm btn-outline"
+                        [disabled]="pagedInterventions.first"
+                        (click)="onPageChange(pagedInterventions.number - 1)">
+                    <i class="icon-chevron-left"></i>
+                </button>
+
+                <span class="page-numbers">
+          <button
+                  *ngFor="let page of [].constructor(pagedInterventions.totalPages); let i = index"
+                  class="btn btn-sm"
+                  [class.btn-primary]="i === pagedInterventions.number"
+                  [class.btn-outline]="i !== pagedInterventions.number"
+                  (click)="onPageChange(i)"
+                  [hidden]="Math.abs(i - pagedInterventions.number) > 2 && i !== 0 && i !== pagedInterventions.totalPages - 1">
+            {{i + 1}}
+          </button>
+        </span>
+
+                <button
+                        class="btn btn-sm btn-outline"
+                        [disabled]="pagedInterventions.last"
+                        (click)="onPageChange(pagedInterventions.number + 1)">
+                    <i class="icon-chevron-right"></i>
+                </button>
+                <button
+                        class="btn btn-sm btn-outline"
+                        [disabled]="pagedInterventions.last"
+                        (click)="onPageChange(pagedInterventions.totalPages - 1)">
+                    <i class="icon-chevrons-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+        <div class="modal-container large" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">{{modalTitle}}</h2>
+                <button class="btn btn-close" (click)="closeModal()">
+                    <i class="icon-x"></i>
+                </button>
+            </div>
+
+            <form [formGroup]="interventionForm" (ngSubmit)="onSubmit()" class="modal-body">
+                <div class="form-grid">
+                    <!-- Titre -->
+                    <div class="form-group full-width">
+                        <label for="titre" class="form-label required">Titre de l'intervention</label>
+                        <input
+                                id="titre"
+                                type="text"
+                                formControlName="titre"
+                                class="form-control"
+                                [class.error]="interventionForm.get('titre')?.errors && interventionForm.get('titre')?.touched"
+                                placeholder="Ex: Maintenance ordinateur bureau 205">
+                        <div class="error-message" *ngIf="getErrorMessage('titre')">
+                            {{getErrorMessage('titre')}}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group full-width">
+                        <label for="description" class="form-label required">Description</label>
+                        <textarea
+                                id="description"
+                                formControlName="description"
+                                class="form-control"
+                                rows="3"
+                                placeholder="Décrivez l'intervention à effectuer...">
+            </textarea>
+                        <div class="error-message" *ngIf="getErrorMessage('description')">
+                            {{getErrorMessage('description')}}
+                        </div>
+                    </div>
+
+                    <!-- Type d'intervention -->
+                    <div class="form-group">
+                        <label for="typeIntervention" class="form-label required">Type d'intervention</label>
+                        <select
+                                id="typeIntervention"
+                                formControlName="typeIntervention"
+                                class="form-control">
+                            <option value="">Sélectionnez un type</option>
+                            <option value="MAINTENANCE_PREVENTIVE">Maintenance Préventive</option>
+                            <option value="MAINTENANCE_CORRECTIVE">Maintenance Corrective</option>
+                            <option value="REPARATION">Réparation</option>
+                            <option value="INSTALLATION">Installation</option>
+                            <option value="CONFIGURATION">Configuration</option>
+                            <option value="MISE_A_JOUR">Mise à jour</option>
+                            <option value="DIAGNOSTIC">Diagnostic</option>
+                            <option value="AUTRE">Autre</option>
+                        </select>
+                        <div class="error-message" *ngIf="getErrorMessage('typeIntervention')">
+                            {{getErrorMessage('typeIntervention')}}
+                        </div>
+                    </div>
+
+                    <!-- Priorité -->
+                    <div class="form-group">
+                        <label for="priorite" class="form-label required">Priorité</label>
+                        <select
+                                id="priorite"
+                                formControlName="priorite"
+                                class="form-control">
+                            <option value="">Sélectionnez une priorité</option>
+                            <option value="CRITIQUE">Critique</option>
+                            <option value="HAUTE">Haute</option>
+                            <option value="MOYENNE">Moyenne</option>
+                            <option value="BASSE">Basse</option>
+                        </select>
+                        <div class="error-message" *ngIf="getErrorMessage('priorite')">
+                            {{getErrorMessage('priorite')}}
+                        </div>
+                    </div>
+
+                    <!-- Statut (only for edit mode) -->
+                    <div class="form-group" *ngIf="modalMode === 'edit'">
+                        <label for="statut" class="form-label">Statut</label>
+                        <select
+                                id="statut"
+                                formControlName="statut"
+                                class="form-control">
+                            <option value="PLANIFIEE">Planifiée</option>
+                            <option value="EN_ATTENTE">En attente</option>
+                            <option value="EN_COURS">En cours</option>
+                            <option value="SUSPENDUE">Suspendue</option>
+                            <option value="TERMINEE">Terminée</option>
+                            <option value="ANNULEE">Annulée</option>
+                            <option value="VALIDEE">Validée</option>
+                        </select>
+                    </div>
+
+                    <!-- Date d'échéance -->
+                    <div class="form-group">
+                        <label for="dateEcheance" class="form-label required">Date d'échéance</label>
+                        <input
+                                id="dateEcheance"
+                                type="datetime-local"
+                                formControlName="dateEcheance"
+                                class="form-control">
+                        <div class="error-message" *ngIf="getErrorMessage('dateEcheance')">
+                            {{getErrorMessage('dateEcheance')}}
+                        </div>
+                    </div>
+
+                    <!-- Durée estimée -->
+                    <div class="form-group">
+                        <label for="dureeEstimee" class="form-label">Durée estimée (heures)</label>
+                        <input
+                                id="dureeEstimee"
+                                type="number"
+                                formControlName="dureeEstimee"
+                                class="form-control"
+                                min="0"
+                                step="0.5">
+                    </div>
+
+                    <!-- Coût -->
+                    <div class="form-group">
+                        <label for="cout" class="form-label">Coût estimé (€)</label>
+                        <input
+                                id="cout"
+                                type="number"
+                                formControlName="cout"
+                                class="form-control"
+                                min="0"
+                                step="0.01">
+                    </div>
+
+                    <!-- Asset -->
+                    <div class="form-group">
+                        <label for="assetId" class="form-label">Asset concerné</label>
+                        <select
+                                id="assetId"
+                                formControlName="assetId"
+                                class="form-control">
+                            <option value="">Sélectionnez un asset</option>
+                            <option *ngFor="let asset of availableAssets" [value]="asset.id">
+                                {{asset.nom}} - {{asset.code}}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Technicien -->
+                    <div class="form-group">
+                        <label for="technicienId" class="form-label">Technicien assigné</label>
+                        <select
+                                id="technicienId"
+                                formControlName="technicienId"
+                                class="form-control">
+                            <option value="">Sélectionnez un technicien</option>
+                            <option *ngFor="let technicien of availableTechniciens" [value]="technicien.id">
+                                {{technicien.prenom}} {{technicien.nom}}
+                                <span *ngIf="technicien.specialite"> - {{technicien.specialite}}</span>
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Service -->
+                    <div class="form-group">
+                        <label for="serviceId" class="form-label">Service concerné</label>
+                        <select
+                                id="serviceId"
+                                formControlName="serviceId"
+                                class="form-control">
+                            <option value="">Sélectionnez un service</option>
+                            <option *ngFor="let service of availableServices" [value]="service.id">
+                                {{service.serviceName}} ({{service.code}})
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            <div class="modal-footer" *ngIf="modalMode !== 'view'">
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        (click)="closeModal()">
+                    Annuler
+                </button>
+                <button
+                        type="submit"
+                        class="btn btn-primary"
+                        [disabled]="interventionForm.invalid || loading"
+                        (click)="onSubmit()">
+          <span *ngIf="loading" class="loading-text">
+            <i class="spinner-small"></i>
+              {{modalMode === 'create' ? 'Création...' : 'Modification...'}}
+          </span>
+                    <span *ngIf="!loading">
+            {{modalMode === 'create' ? 'Créer' : 'Modifier'}}
+          </span>
+                </button>
+            </div>
+
+            <div class="modal-footer" *ngIf="modalMode === 'view'">
+                <button
+                        type="button"
+                        class="btn btn-secondary"
+                        (click)="closeModal()">
+                    Fermer
+                </button>
+                <button
+                        type="button"
+                        class="btn btn-primary"
+                        (click)="openEditModal(currentIntervention!)">
+                    Modifier
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
