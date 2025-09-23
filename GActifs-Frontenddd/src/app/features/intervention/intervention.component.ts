@@ -16,7 +16,7 @@ import {
   Technicien, TypeIntervention
 } from '../../shared/models/Intervention';
 import {InterventionService, TechnicienService} from "../../core/services/intervention.service";
-import {DatePipe, SlicePipe} from "@angular/common";
+import {DatePipe, NgForOf, NgIf, SlicePipe} from "@angular/common";
 
 @Component({
   selector: 'app-intervention',
@@ -24,7 +24,9 @@ import {DatePipe, SlicePipe} from "@angular/common";
   imports: [
     ReactiveFormsModule,
     SlicePipe,
-    DatePipe
+    DatePipe,
+    NgIf,
+    NgForOf
   ],
   styleUrls: ['./intervention.component.scss']
 })

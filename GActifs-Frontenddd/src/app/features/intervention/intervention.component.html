@@ -485,7 +485,7 @@
                                 class="form-control">
                             <option value="">Sélectionnez un asset</option>
                             <option *ngFor="let asset of availableAssets" [value]="asset.id">
-                                {{asset.nom}} - {{asset.code}}
+                                {{asset.nom}} - {{asset.reference}}
                             </option>
                         </select>
                     </div>
